@@ -60,7 +60,7 @@ personal or business messaging needs.
 
 %prep
 # Unpacking main source archive...
-%autosetup -n %{name} -p1
+%autosetup -p1
 mkdir %{_target_platform}
 
 %build
@@ -76,7 +76,6 @@ mkdir -p "%{buildroot}%{_bindir}"
 install -m 0755 -p %{_target_platform}/Telegram/Telegram "%{buildroot}%{_bindir}/%{name}"
 
 # Installing desktop shortcut...
-mv lib/xdg/telegramdesktop.desktop lib/xdg/%{name}.desktop
 desktop-file-install --dir="%{buildroot}%{_datadir}/applications" lib/xdg/%{name}.desktop
 
 # Installing icons...
@@ -87,23 +86,11 @@ for size in 16 32 48 64 128 256 512; do
 done
 
 # Installing appdata for Gnome Software...
-install -d "%{buildroot}%{_datadir}/appdata"
-install -m 0644 -p lib/xdg/telegramdesktop.appdata.xml "%{buildroot}%{_datadir}/appdata/%{name}.appdata.xml"
+install -d "%{buildroot}%{_datadir}/metainfo"
+install -m 0644 -p lib/xdg/%{name}.appdata.xml "%{buildroot}%{_datadir}/metainfo/%{name}.appdata.xml"
 
 %check
-appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/appdata/%{name}.appdata.xml"
-
-%post
-/bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null || :
-
-%postun
-if [ $1 -eq 0 ] ; then
-    /bin/touch --no-create %{_datadir}/icons/hicolor &>/dev/null
-    /usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
-fi
-
-%posttrans
-/usr/bin/gtk-update-icon-cache %{_datadir}/icons/hicolor &>/dev/null || :
+appstream-util validate-relax --nonet "%{buildroot}%{_datadir}/metainfo/%{name}.appdata.xml"
 
 %files
 %doc README.md changelog.txt
@@ -111,7 +98,7 @@ fi
 %{_bindir}/%{name}
 %{_datadir}/applications/%{name}.desktop
 %{_datadir}/icons/hicolor/*/apps/%{name}.png
-%{_datadir}/appdata/%{name}.appdata.xml
+%{_datadir}/metainfo/%{name}.appdata.xml
 
 %changelog
 * Thu Dec 21 2017 Vitaly Zaitsev <vitaly@easycoding.org> - 1.0.0-1
