@@ -30,6 +30,8 @@ void log(const char *message, const char *file, int line);
 
 // Release build assertions.
 inline constexpr void noop() {
+  // MSVC2015 requires return to suppress warning: a constexpr function must contain exactly one return statement
+  return void();
 }
 
 [[noreturn]] inline void fail(const char *message, const char *file, int line) {
@@ -44,8 +46,10 @@ inline constexpr void noop() {
 }
 
 inline constexpr void validate(bool condition, const char *message, const char *file, int line) {
-	(GSL_UNLIKELY(!(condition))) ? fail(message, file, line) : noop();
+  // MSVC2015 requires return to suppress error C3249: illegal statement or sub-expression for 'constexpr' function
+  return (GSL_UNLIKELY(!(condition))) ? fail(message, file, line) : noop();
 }
+
 
 } // namespace assertion
 } // namespace base

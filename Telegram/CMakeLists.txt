@@ -7,6 +7,12 @@ if (LINUX)
     endif()
 endif()
 
+if (PACKAGED_BUILD)
+    add_definitions(-DTDESKTOP_DISABLE_REGISTER_CUSTOM_SCHEME)
+    add_definitions(-DTDESKTOP_DISABLE_DESKTOP_FILE_GENERATION)
+    add_definitions(-DTDESKTOP_DISABLE_UNITY_INTEGRATION)
+endif()
+
 ##================================================
 ## Codegen Tools
 ##================================================
@@ -69,6 +75,7 @@ add_custom_command(
     MAIN_DEPENDENCY
         ${CMAKE_CURRENT_SOURCE_DIR}/Resources/langs/lang.strings
 )
+
 add_custom_target(lang_output
     DEPENDS lang_auto.h lang_auto.cpp)
 
@@ -163,6 +170,16 @@ foreach (src ${style_files})
         ${CMAKE_CURRENT_BINARY_DIR}/styles/style_${src_file}.cpp)
 
 endforeach()
+
+##================================================
+## Branding
+##================================================
+
+set(KEPKA_APPNAME "Kepka"
+    CACHE STRING "Application name")
+
+configure_file(SourceFiles/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
+include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 ##================================================
 ## Telegram app
@@ -565,9 +582,9 @@ endif()
 
 if (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_USING_V110_SDK71_
-        -DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE -DWIN64
+        -DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE 
         -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
-        -DHAVE_STDINT_H -DZLIB_WINAPI)
+        -DHAVE_STDINT_H)
 endif()
 
 add_definitions(-DAL_LIBTYPE_STATIC)

@@ -38,20 +38,21 @@ Provide paths to OpenAL-soft and Qt5 in CMAKE_PREFIX_PATH variable when configur
 
 ### Windows
 
-Install [vcpkg][] (no need to integrate, just install), [cmake][], [Qt][qt] 5.9 or later and [Visual Studio][visual-studio] 2017 or later, and set the following environment variables:
+Install [vcpkg][] (no need to integrate, just install), [python][] 3.5, [cmake][], [Qt][qt] 5.9 or later and [Visual Studio][visual-studio] 2017 or later, and set the following environment variables:
 
-- `QT_DIR`: directory where Qt binary distribution is installed, e.g. `C:\Qt\5.9.1\msvc2017_64`
+- `QTDIR`: directory where Qt binary distribution is installed, e.g. `C:\Qt\5.9.1\msvc2017_64`
 - `VCPKG`: directory where VCPKG is installed, e.g. `C:\vcpkg`
 
 After that, execute the following `cmd` commands from Visual Studio developer command prompt:
 
 ```console
+$ set PATH=c:\Python35;%PATH%
 $ "%VCPKG%\vcpkg" install --triplet x64-windows openal-soft openssl opus zlib ffmpeg
 $ mkdir build
 $ cd build
-$ set PATH=%QT_DIR%\bin;%PATH%
+$ set PATH=%QTDIR%\bin;%PATH%
 $ cmake -G"Visual Studio 15 2017 Win64" -DCMAKE_TOOLCHAIN_FILE="%VCPKG%\scripts\buildsystems\vcpkg.cmake" -DCMAKE_BUILD_TYPE=RelWithDebInfo ..
-$ cmake --build .
+$ cmake --build . --config RelWithDebInfo
 ```
 ![Preview of Telegram Desktop][preview_image]
 
@@ -59,13 +60,15 @@ The source code is published under GPLv3 with OpenSSL exception, the license is 
 
 ## Supported systems
 
-* Windows XP - Windows 10 (**not** RT)
+* Windows 7 - Windows 10 (**not** RT)
 * Mac OS X 10.8 - Mac OS X 10.11
 * Mac OS X 10.6 - Mac OS X 10.7 (separate build)
 * Ubuntu 12.04 - Ubuntu 16.04
 * Fedora 22 - Fedora 24
 
 ## Third-party
+
+* [CMake 3.9+][cmake-build]
 
 * Qt 5.9+ ([LGPL](http://doc.qt.io/qt-5/lgpl.html))
 * OpenSSL 1.0.1g ([OpenSSL License](https://www.openssl.org/source/license.html))
@@ -80,10 +83,9 @@ The source code is published under GPLv3 with OpenSSL exception, the license is 
 * Emoji alpha codes ([MIT License](https://github.com/emojione/emojione/blob/master/extras/alpha-codes/LICENSE.md))
 * Catch test framework ([Boost License](https://github.com/philsquared/Catch/blob/master/LICENSE.txt))
 
-* [CMake][cmake-build]
-
 [//]: # (LINKS)
 [cmake]: https://cmake.org/
+[python]: https://python.org/
 [cmake-build]: docs/building-cmake.md
 [qt]: https://www.qt.io/
 [telegram]: https://telegram.org
