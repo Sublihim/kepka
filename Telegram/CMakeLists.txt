@@ -592,7 +592,7 @@ add_definitions(-DAL_ALEXT_PROTOTYPES)
 add_definitions(-DTGVOIP_USE_CXX11_LIB)
 
 add_definitions(-DTDESKTOP_DISABLE_CRASH_REPORTS)
-add_definitions(-DTDESKTOP_DISABLE_GTK_INTEGRATION) # Linux only
+add_definitions(-DTDESKTOP_DISABLE_UNITY_INTEGRATION) # Linux only
 
 if (LINUX)
     add_definitions(-D_REENTRANT)
@@ -639,14 +639,6 @@ endif()
 # Disable a single annoying warning about c++17
 if(NOT WIN32)
     set_flag_if_supported(Telegram WNCE -Wno-c++1z-extensions)
-endif()
-
-# Enable C++14 support for msvc (@todo this should be done in cmake - see ver 3.10 or above)
-if(WIN32)
-    target_compile_options(Telegram PRIVATE
-        /std:c++14
-        /EHsc   # Catch C++ exceptions only, extern C functions never throw a C++ exception.
-    )
 endif()
 
 target_compile_definitions(Telegram PRIVATE ${FFMPEG_DEFINITIONS})

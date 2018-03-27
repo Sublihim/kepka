@@ -4,9 +4,9 @@
 )](https://ci.appveyor.com/project/procxx/tdesktop)
 
 
-# [Telegram Desktop][telegram_desktop] - pro.cxx fork
+# Kepka - Unofficial [Telegram Desktop][telegram_desktop] fork from pro.cxx community
 
-This is the complete source code and the build instructions for the alpha version of the pro.cxx fork of desktop client for the [Telegram][telegram] messenger, based on the [Telegram API][telegram_api] and the [MTProto][telegram_proto] secure protocol.
+This is the complete source code and the build instructions for the Kepka's alpha version based on the [Telegram API][telegram_api] and the [MTProto][telegram_proto] secure protocol.
 
 ## Build instructions
 
@@ -25,7 +25,47 @@ Debian/Ubuntu:
 ```console
 # apt-get install qtbase5-private-dev zlib1g-dev libopenal-dev libavcodec-dev libavresample-dev libswscale-dev libopenal-data libopenal1 libavutil-dev
 ```
+
 You most likely have to rebuild ffmpeg with `--enable-swresample --enable-swscale`
+
+After that, go to the [next section](#configuring-and-building).
+
+Fedora:
+```console
+# dnf install rpm-build rpmdevtools mock mock-rpmfusion-free
+```
+
+Add yourself to `mock` group (you must run this only for the first time after installing mock):
+```bash
+sudo usermod -a -G mock $(whoami)
+```
+
+You need to relogin to your system or run:
+```bash
+newgrp mock
+```
+
+Create RPM build base directories:
+```bash
+rpmdev-setuptree
+```
+
+Download sources:
+```bash
+spectool -g -R kepka.spec
+```
+
+Generate SRPM:
+```bash
+rpmbuild -bs kepka.spec
+```
+
+Start mock build sequence:
+```bash
+mock -r fedora-$(rpm -E %fedora)-$(uname -m)-rpmfusion_free --rebuild ~/rpmbuild/SRPMS/kepka*.src.rpm
+```
+
+#### Configuring and building
 
 Provide paths to OpenAL-soft and Qt5 in CMAKE_PREFIX_PATH variable when configuring.
 
@@ -68,7 +108,7 @@ The source code is published under GPLv3 with OpenSSL exception, the license is 
 
 ## Third-party
 
-* [CMake 3.9+][cmake-build]
+* [CMake 3.10+][cmake-build]
 
 * Qt 5.9+ ([LGPL](http://doc.qt.io/qt-5/lgpl.html))
 * OpenSSL 1.0.1g ([OpenSSL License](https://www.openssl.org/source/license.html))
