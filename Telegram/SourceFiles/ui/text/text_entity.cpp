@@ -24,6 +24,17 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include "lang/lang_tag.h"
 
 namespace TextUtilities {
+
+// note: these names are taken from Unicode Specification.
+// All spaces in this names are replaced to SwitchingCase, all dashes ('-')
+// are replaced to underscore ('_')
+enum UnicodePoints
+{
+	Left_PointingDoubleAngleQuotationMark = 171,
+	Right_PointingDoubleAngleQuotationMark = 187,
+	EmDash = 8212,
+};
+
 namespace {
 
 QString ExpressionDomain() {
@@ -2120,9 +2131,11 @@ void PrepareForSending(TextWithEntities &result, qint32 flags) {
 		ParseEntities(result, flags);
 	}
 
-	ReplaceStringWithChar(qstr("--"), QChar(8212), result, true);
-	ReplaceStringWithChar(qstr("<<"), QChar(171), result);
-	ReplaceStringWithChar(qstr(">>"), QChar(187), result);
+	if (cMessageFormatting()) {
+		ReplaceStringWithChar(qstr("--"), QChar(EmDash), result, true);
+		ReplaceStringWithChar(qstr("<<"), QChar(Left_PointingDoubleAngleQuotationMark), result);
+		ReplaceStringWithChar(qstr(">>"), QChar(Right_PointingDoubleAngleQuotationMark), result);
+	}
 
 	if (cReplaceEmojis()) {
 		Ui::Emoji::ReplaceInText(result);
