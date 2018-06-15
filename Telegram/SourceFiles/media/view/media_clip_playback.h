@@ -20,6 +20,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "base/lambda.h"
+#include "ui/animation.h"
 #include "ui/widgets/continuous_sliders.h"
 
 namespace Media {
@@ -62,7 +64,6 @@ private:
 	qint64 _length = 0;
 
 	bool _playing = false;
-
 };
 
 } // namespace Clip

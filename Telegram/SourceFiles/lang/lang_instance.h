@@ -20,8 +20,12 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
-#include "lang_auto.h"
+#include "base/observer.h"
 #include "base/weak_unique_ptr.h"
+#include "core/basic_types.h"
+#include "core/utils.h"
+#include "lang_auto.h"
+#include "scheme.h"
 
 namespace Lang {
 
@@ -30,13 +34,7 @@ constexpr auto kLegacyCustomLanguage = -1;
 constexpr auto kLegacyDefaultLanguage = 0;
 
 constexpr str_const kLegacyLanguages[] = {
-	"en",
-	"it",
-	"es",
-	"de",
-	"nl",
-	"pt_BR",
-	"ko",
+    "en", "it", "es", "de", "nl", "pt_BR", "ko",
 };
 
 inline QString ConvertLegacyLanguageId(const QString &languageId) {
@@ -92,7 +90,8 @@ public:
 	bool isNonDefaultPlural(LangKey key) {
 		Expects(key >= 0 && key < kLangKeysCount);
 		Expects(_nonDefaultSet.size() == kLangKeysCount);
-		return _nonDefaultSet[key] || _nonDefaultSet[key + 1] || _nonDefaultSet[key + 2] || _nonDefaultSet[key + 3] || _nonDefaultSet[key + 4] || _nonDefaultSet[key + 5];
+		return _nonDefaultSet[key] || _nonDefaultSet[key + 1] || _nonDefaultSet[key + 2] || _nonDefaultSet[key + 3] ||
+		       _nonDefaultSet[key + 4] || _nonDefaultSet[key + 5];
 	}
 
 private:
@@ -128,7 +127,6 @@ private:
 	std::vector<QString> _values;
 	std::vector<uchar> _nonDefaultSet;
 	std::map<QByteArray, QByteArray> _nonDefaultValues;
-
 };
 
 } // namespace Lang

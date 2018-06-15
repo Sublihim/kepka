@@ -20,12 +20,15 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "ui/widgets/multi_select.h"
 
+#include "app.h"
+#include "lang/lang_keys.h"
+#include "layout.h"
 #include "styles/style_widgets.h"
+#include "ui/effects/cross_animation.h"
+#include "ui/twidget.h"
 #include "ui/widgets/buttons.h"
 #include "ui/widgets/input_fields.h"
 #include "ui/widgets/scroll_area.h"
-#include "ui/effects/cross_animation.h"
-#include "lang/lang_keys.h"
 
 namespace Ui {
 namespace {
@@ -34,11 +37,12 @@ constexpr int kWideScale = 3;
 
 } // namespace
 
-MultiSelect::Item::Item(const style::MultiSelectItem &st, quint64 id, const QString &text, style::color color, PaintRoundImage &&paintRoundImage)
-: _st(st)
-, _id(id)
-, _color(color)
-, _paintRoundImage(std::move(paintRoundImage)) {
+MultiSelect::Item::Item(const style::MultiSelectItem &st, quint64 id, const QString &text, style::color color,
+                        PaintRoundImage &&paintRoundImage)
+    : _st(st)
+    , _id(id)
+    , _color(color)
+    , _paintRoundImage(std::move(paintRoundImage)) {
 	setText(text);
 }
 
@@ -135,7 +139,6 @@ bool MultiSelect::Item::paintCached(Painter &p, int x, int y, int outerWidth) {
 	PainterHighQualityEnabler hq(p);
 
 	auto opacity = _visibility.current(_hiding ? 0. : 1.);
-	auto scale = opacity + _st.minScale * (1. - opacity);
 	auto height = opacity * _cache.height() / _cache.devicePixelRatio();
 	auto width = opacity * _cache.width() / _cache.devicePixelRatio();
 
@@ -181,9 +184,11 @@ void MultiSelect::Item::setPosition(int x, int y, int outerWidth, int maxVisible
 				auto copy = SlideAnimation(_updateCallback, _x, x, _y, _st.duration);
 				_copies.push_back(std::move(copy));
 			} else {
-				auto copyHiding = SlideAnimation(_updateCallback, _x, (y > _y) ? rightHidden : leftHidden, _y, _st.duration);
+				auto copyHiding =
+				    SlideAnimation(_updateCallback, _x, (y > _y) ? rightHidden : leftHidden, _y, _st.duration);
 				_copies.push_back(std::move(copyHiding));
-				auto copyShowing = SlideAnimation(_updateCallback, (y > _y) ? leftHidden : rightHidden, x, y, _st.duration);
+				auto copyShowing =
+				    SlideAnimation(_updateCallback, (y > _y) ? leftHidden : rightHidden, x, y, _st.duration);
 				_copies.push_back(std::move(copyShowing));
 			}
 		} else if (!found) {
@@ -222,7 +227,7 @@ void MultiSelect::Item::prepareCache() {
 	data.setDevicePixelRatio(cRetinaFactor());
 	{
 		Painter p(&data);
-		paintOnce(p, _width * (kWideScale - 1) / 2, _st.height  * (kWideScale - 1) / 2, cacheWidth, getms());
+		paintOnce(p, _width * (kWideScale - 1) / 2, _st.height * (kWideScale - 1) / 2, cacheWidth, getms());
 	}
 	_cache = App::pixmapFromImageInPlace(std::move(data));
 }
@@ -243,12 +248,13 @@ void MultiSelect::Item::setOver(bool over) {
 	}
 }
 
-MultiSelect::MultiSelect(QWidget *parent, const style::MultiSelect &st, base::lambda<QString()> placeholderFactory) : TWidget(parent)
-, _st(st)
-, _scroll(this, _st.scroll) {
-	_inner = _scroll->setOwnedWidget(object_ptr<Inner>(this, st, std::move(placeholderFactory), [this](int activeTop, int activeBottom) {
-		scrollTo(activeTop, activeBottom);
-	}));
+MultiSelect::MultiSelect(QWidget *parent, const style::MultiSelect &st, base::lambda<QString()> placeholderFactory)
+    : TWidget(parent)
+    , _st(st)
+    , _scroll(this, _st.scroll) {
+	_inner = _scroll->setOwnedWidget(
+	    object_ptr<Inner>(this, st, std::move(placeholderFactory),
+	                      [this](int activeTop, int activeBottom) { scrollTo(activeTop, activeBottom); }));
 	_scroll->installEventFilter(this);
 	_inner->setResizedCallback([this](int innerHeightDelta) {
 		auto newHeight = resizeGetHeight(width());
@@ -319,12 +325,14 @@ QString MultiSelect::getQuery() const {
 	return _inner->getQuery();
 }
 
-void MultiSelect::addItem(quint64 itemId, const QString &text, style::color color, PaintRoundImage paintRoundImage, AddItemWay way) {
+void MultiSelect::addItem(quint64 itemId, const QString &text, style::color color, PaintRoundImage paintRoundImage,
+                          AddItemWay way) {
 	addItemInBunch(itemId, text, color, std::move(paintRoundImage));
 	_inner->finishItemsBunch(way);
 }
 
-void MultiSelect::addItemInBunch(quint64 itemId, const QString &text, style::color color, PaintRoundImage paintRoundImage) {
+void MultiSelect::addItemInBunch(quint64 itemId, const QString &text, style::color color,
+                                 PaintRoundImage paintRoundImage) {
 	_inner->addItemInBunch(std::make_unique<Item>(_st.item, itemId, text, color, std::move(paintRoundImage)));
 }
 
@@ -361,11 +369,13 @@ int MultiSelect::resizeGetHeight(int newWidth) {
 	return newHeight;
 }
 
-MultiSelect::Inner::Inner(QWidget *parent, const style::MultiSelect &st, base::lambda<QString()> placeholder, ScrollCallback callback) : TWidget(parent)
-, _st(st)
-, _scrollCallback(std::move(callback))
-, _field(this, _st.field, std::move(placeholder))
-, _cancel(this, _st.fieldCancel) {
+MultiSelect::Inner::Inner(QWidget *parent, const style::MultiSelect &st, base::lambda<QString()> placeholder,
+                          ScrollCallback callback)
+    : TWidget(parent)
+    , _st(st)
+    , _scrollCallback(std::move(callback))
+    , _field(this, _st.field, std::move(placeholder))
+    , _cancel(this, _st.fieldCancel) {
 	_field->customUpDown(true);
 	connect(_field, SIGNAL(focused()), this, SLOT(onFieldFocused()));
 	connect(_field, SIGNAL(changed()), this, SLOT(onQueryChanged()));
@@ -428,9 +438,9 @@ void MultiSelect::Inner::updateFieldGeometry() {
 void MultiSelect::Inner::updateHasAnyItems(bool hasAnyItems) {
 	_field->setPlaceholderHidden(hasAnyItems);
 	updateCursor();
-	_iconOpacity.start([this] {
-		rtlupdate(_st.padding.left(), _st.padding.top(), _st.fieldIcon.width(), _st.fieldIcon.height());
-	}, hasAnyItems ? 1. : 0., hasAnyItems ? 0. : 1., _st.item.duration);
+	_iconOpacity.start(
+	    [this] { rtlupdate(_st.padding.left(), _st.padding.top(), _st.fieldIcon.width(), _st.fieldIcon.height()); },
+	    hasAnyItems ? 1. : 0., hasAnyItems ? 0. : 1., _st.item.duration);
 }
 
 void MultiSelect::Inner::updateCursor() {
@@ -453,7 +463,8 @@ void MultiSelect::Inner::setActiveItem(int active, ChangeActiveWay skipSetFocus)
 		setInnerFocus();
 	}
 	if (_scrollCallback) {
-		auto rect = (_active >= 0) ? _items[_active]->rect() : _field->geometry().translated(-_st.padding.left(), -_st.padding.top());
+		auto rect = (_active >= 0) ? _items[_active]->rect() :
+		                             _field->geometry().translated(-_st.padding.left(), -_st.padding.top());
 		_scrollCallback(rect.y(), rect.y() + rect.height() + _st.padding.top() + _st.padding.bottom());
 	}
 	update();
@@ -537,10 +548,10 @@ void MultiSelect::Inner::paintEvent(QPaintEvent *e) {
 
 QMargins MultiSelect::Inner::itemPaintMargins() const {
 	return {
-		std::max(_st.itemSkip, _st.padding.left()),
-		_st.itemSkip,
-		std::max(_st.itemSkip, _st.padding.right()),
-		_st.itemSkip,
+	    std::max(_st.itemSkip, _st.padding.left()),
+	    _st.itemSkip,
+	    std::max(_st.itemSkip, _st.padding.right()),
+	    _st.itemSkip,
 	};
 }
 
@@ -767,9 +778,7 @@ int MultiSelect::Inner::getItemsCount() const {
 QVector<quint64> MultiSelect::Inner::getItems() const {
 	auto result = QVector<quint64>();
 	result.reserve(_items.size());
-	for_const (auto &item, _items) {
-		result.push_back(item->id());
-	}
+	for_const (auto &item, _items) { result.push_back(item->id()); }
 	return result;
 }
 

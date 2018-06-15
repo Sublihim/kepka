@@ -24,6 +24,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include "mtproto/mtp_instance.h"
 #include "mtproto/special_config_request.h"
 
+#include "facades.h"
+
 namespace MTP {
 namespace internal {
 namespace {
@@ -33,9 +35,10 @@ constexpr auto kSpecialRequestTimeoutMs = 6000; // 4 seconds timeout for it to w
 
 } // namespace
 
-ConfigLoader::ConfigLoader(not_null<Instance*> instance, RPCDoneHandlerPtr onDone, RPCFailHandlerPtr onFail) : _instance(instance)
-	, _doneHandler(onDone)
-	, _failHandler(onFail) {
+ConfigLoader::ConfigLoader(not_null<Instance *> instance, RPCDoneHandlerPtr onDone, RPCFailHandlerPtr onFail)
+    : _instance(instance)
+    , _doneHandler(onDone)
+    , _failHandler(onFail) {
 	_enumDCTimer.setCallback([this] { enumerate(); });
 	_specialEnumTimer.setCallback([this] { sendSpecialRequest(); });
 }
@@ -110,17 +113,15 @@ void ConfigLoader::createSpecialLoader() {
 		return;
 	}
 	if (!_specialLoader || (!_specialEnumRequest && _specialEndpoints.empty())) {
-		_specialLoader = std::make_unique<SpecialConfigRequest>([this](DcId dcId, const std::string &ip, int port) {
-			addSpecialEndpoint(dcId, ip, port);
-		});
+		_specialLoader = std::make_unique<SpecialConfigRequest>(
+		    [this](DcId dcId, const std::string &ip, int port) { addSpecialEndpoint(dcId, ip, port); });
 		_triedSpecialEndpoints.clear();
 	}
 }
 
 void ConfigLoader::addSpecialEndpoint(DcId dcId, const std::string &ip, int port) {
-	auto endpoint = SpecialEndpoint { dcId, ip, port };
-	if (base::contains(_specialEndpoints, endpoint)
-		|| base::contains(_triedSpecialEndpoints, endpoint)) {
+	auto endpoint = SpecialEndpoint{dcId, ip, port};
+	if (base::contains(_specialEndpoints, endpoint) || base::contains(_triedSpecialEndpoints, endpoint)) {
 		return;
 	}
 	DEBUG_LOG(("MTP Info: Special endpoint received, '%1:%2'").arg(ip.c_str()).arg(port));
@@ -146,13 +147,15 @@ void ConfigLoader::sendSpecialRequest() {
 	auto index = rand_value<quint32>() % quint32(_specialEndpoints.size());
 	auto endpoint = _specialEndpoints.begin() + index;
 	_specialEnumCurrent = specialToRealDcId(endpoint->dcId);
-	_instance->dcOptions()->constructAddOne(_specialEnumCurrent, MTPDdcOption::Flag::f_tcpo_only, endpoint->ip, endpoint->port);
+	_instance->dcOptions()->constructAddOne(_specialEnumCurrent, MTPDdcOption::Flag::f_tcpo_only, endpoint->ip,
+	                                        endpoint->port);
 	_specialEnumRequest = _instance->send(MTPhelp_GetConfig(), rpcDone([weak](const MTPConfig &result) {
-		if (!weak) {
-			return;
-		}
-		weak->specialConfigLoaded(result);
-	}), _failHandler, _specialEnumCurrent);
+		                                      if (!weak) {
+			                                      return;
+		                                      }
+		                                      weak->specialConfigLoaded(result);
+	                                      }),
+	                                      _failHandler, _specialEnumCurrent);
 	_triedSpecialEndpoints.push_back(*endpoint);
 	_specialEndpoints.erase(endpoint);
 

@@ -22,6 +22,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 
 #include "boxes/abstract_box.h"
 #include "styles/style_widgets.h"
+#include "ui/effects/ripple_animation.h"
 
 QString findValidCode(QString fullCode);
 
@@ -56,14 +57,13 @@ private:
 	bool _active = false;
 	QString _text;
 	QPainterPath _placeholderPath;
-
 };
 
 class CountrySelectBox : public BoxContent {
 	Q_OBJECT
 
 public:
-	CountrySelectBox(QWidget*);
+	CountrySelectBox(QWidget *);
 
 signals:
 	void countryChosen(const QString &iso);
@@ -85,7 +85,6 @@ private:
 
 	class Inner;
 	QPointer<Inner> _inner;
-
 };
 
 // This class is hold in header because it requires Qt preprocessing.
@@ -135,5 +134,4 @@ private:
 	bool _mouseSelection = false;
 
 	std::vector<std::unique_ptr<Ui::RippleAnimation>> _ripples;
-
 };

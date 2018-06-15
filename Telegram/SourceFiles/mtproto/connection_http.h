@@ -22,6 +22,11 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 
 #include "mtproto/connection_abstract.h"
 
+#include <QNetworkAccessManager>
+#include <QUrl>
+
+class QNetworkReply;
+
 namespace MTP {
 namespace internal {
 
@@ -51,11 +56,7 @@ public slots:
 	void requestFinished(QNetworkReply *reply);
 
 private:
-	enum Status {
-		WaitingHttp = 0,
-		UsingHttp,
-		FinishedWork
-	};
+	enum Status { WaitingHttp = 0, UsingHttp, FinishedWork };
 	Status status;
 	MTPint128 httpNonce;
 	MTPDdcOption::Flags _flags;
@@ -63,9 +64,8 @@ private:
 	QNetworkAccessManager manager;
 	QUrl address;
 
-	typedef QSet<QNetworkReply*> Requests;
+	typedef QSet<QNetworkReply *> Requests;
 	Requests requests;
-
 };
 
 } // namespace internal

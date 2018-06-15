@@ -20,6 +20,12 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "ui/twidget.h"
+#include <QString>
+
+class QWidget;
+class QPaintEvent;
+
 namespace Ui {
 class IconButton;
 } // namespace Ui
@@ -39,7 +45,6 @@ protected:
 
 private:
 	QString _text;
-
 };
 
 } // namespace Settings

@@ -20,8 +20,9 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
-#include "ui/abstract_button.h"
 #include "styles/style_media_player.h"
+#include "ui/abstract_button.h"
+#include "ui/animation.h"
 
 namespace Media {
 namespace Player {
@@ -57,8 +58,7 @@ private:
 	bool _transformBackward = false;
 
 	base::lambda<void()> _callback;
-
 };
 
-} // namespace Clip
+} // namespace Player
 } // namespace Media

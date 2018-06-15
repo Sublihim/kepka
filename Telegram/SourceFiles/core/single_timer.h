@@ -21,6 +21,10 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #pragma once
 
 #include "core/basic_types.h"
+#include "core/utils.h"
+#include <base/lambda.h>
+
+#include <QTimer>
 
 class SingleTimer : public QTimer { // single shot timer with check
 	Q_OBJECT
@@ -44,5 +48,4 @@ private slots:
 private:
 	TimeMs _finishing = 0;
 	base::lambda<void()> _handler;
-
 };

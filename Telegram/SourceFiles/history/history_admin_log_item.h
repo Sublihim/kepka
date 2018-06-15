@@ -20,22 +20,30 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "base/lambda.h"
+#include "core/basic_types.h"
+#include "core/utils.h"
+#include "history/history_item.h"
+
+class History;
+
 namespace AdminLog {
 
 class HistoryItemOwned;
 class LocalIdManager;
 
-void GenerateItems(not_null<History*> history, LocalIdManager &idManager, const MTPDchannelAdminLogEvent &event, base::lambda<void(HistoryItemOwned item)> callback);
+void GenerateItems(not_null<History *> history, LocalIdManager &idManager, const MTPDchannelAdminLogEvent &event,
+                   base::lambda<void(HistoryItemOwned item)> callback);
 
 // Smart pointer wrapper for HistoryItem* that destroys the owned item.
 class HistoryItemOwned {
 public:
-	explicit HistoryItemOwned(not_null<HistoryItem*> data) : _data(data) {
-	}
+	explicit HistoryItemOwned(not_null<HistoryItem *> data)
+	    : _data(data) {}
 	HistoryItemOwned(const HistoryItemOwned &other) = delete;
 	HistoryItemOwned &operator=(const HistoryItemOwned &other) = delete;
-	HistoryItemOwned(HistoryItemOwned &&other) : _data(base::take(other._data)) {
-	}
+	HistoryItemOwned(HistoryItemOwned &&other)
+	    : _data(base::take(other._data)) {}
 	HistoryItemOwned &operator=(HistoryItemOwned &&other) {
 		_data = base::take(other._data);
 		return *this;
@@ -52,13 +60,12 @@ public:
 	HistoryItem *operator->() const {
 		return get();
 	}
-	operator HistoryItem*() const {
+	operator HistoryItem *() const {
 		return get();
 	}
 
 private:
 	HistoryItem *_data = nullptr;
-
 };
 
 } // namespace AdminLog

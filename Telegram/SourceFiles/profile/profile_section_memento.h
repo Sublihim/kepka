@@ -22,16 +22,19 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 
 #include "window/section_memento.h"
 
+class PeerData;
+
 namespace Profile {
 
 class Widget;
 
 class SectionMemento : public Window::SectionMemento {
 public:
-	SectionMemento(PeerData *peer) : _peer(peer) {
-	}
+	SectionMemento(PeerData *peer)
+	    : _peer(peer) {}
 
-	object_ptr<Window::SectionWidget> createWidget(QWidget *parent, not_null<Window::Controller*> controller, const QRect &geometry) override;
+	object_ptr<Window::SectionWidget> createWidget(QWidget *parent, gsl::not_null<Window::Controller *> controller,
+	                                               const QRect &geometry) override;
 
 	PeerData *getPeer() const {
 		return _peer;
@@ -46,7 +49,6 @@ public:
 private:
 	PeerData *_peer;
 	int _scrollTop = 0;
-
 };
 
-} // namespace Window
+} // namespace Profile

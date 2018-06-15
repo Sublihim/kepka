@@ -20,6 +20,9 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "base/observer.h"
+#include "ui/animation.h"
+#include "ui/twidget.h"
 namespace Ui {
 class IconButton;
 class MediaSlider;
@@ -42,7 +45,6 @@ private:
 	void applyVolumeChange(double volume);
 
 	object_ptr<Ui::MediaSlider> _slider;
-
 };
 
 class VolumeWidget : public TWidget {
@@ -84,8 +86,7 @@ private:
 	QTimer _hideTimer, _showTimer;
 
 	object_ptr<VolumeController> _controller;
-
 };
 
-} // namespace Clip
+} // namespace Player
 } // namespace Media

@@ -20,11 +20,16 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
-#include "base/type_traits.h"
-#include "base/observer.h"
+#include "base/lambda_guard.h"
+#include "history/history.h" // For MediaOverviewType ffs..
+#include "structs.h"
 
+class PeerData;
 class LayerWidget;
 class BoxContent;
+class UserData;
+class History;
+class HistoryItem;
 
 namespace InlineBots {
 namespace Layout {
@@ -44,22 +49,21 @@ inline void CallDelayed(int duration, base::lambda_internal::guard<N, Lambda> &&
 	return internal::CallDelayed(duration, [guarded = std::move(guarded)] { guarded(); });
 }
 
-template <typename Pointer, typename ...PointersAndLambda>
-inline void CallDelayed(int duration, Pointer &&qobject, PointersAndLambda&&... qobjectsAndLambda) {
-	auto guarded = base::lambda_guarded(std::forward<Pointer>(qobject), std::forward<PointersAndLambda>(qobjectsAndLambda)...);
+template <typename Pointer, typename... PointersAndLambda>
+inline void CallDelayed(int duration, Pointer &&qobject, PointersAndLambda &&... qobjectsAndLambda) {
+	auto guarded =
+	    base::lambda_guarded(std::forward<Pointer>(qobject), std::forward<PointersAndLambda>(qobjectsAndLambda)...);
 	return CallDelayed(duration, std::move(guarded));
 }
 
-template <typename ...PointersAndLambda>
-inline base::lambda<void()> LambdaDelayed(int duration, PointersAndLambda&&... qobjectsAndLambda) {
+template <typename... PointersAndLambda>
+inline base::lambda<void()> LambdaDelayed(int duration, PointersAndLambda &&... qobjectsAndLambda) {
 	auto guarded = base::lambda_guarded(std::forward<PointersAndLambda>(qobjectsAndLambda)...);
-	return [guarded = std::move(guarded), duration] {
-		internal::CallDelayed(duration, [guarded] { guarded(); });
-	};
+	return [guarded = std::move(guarded), duration] { internal::CallDelayed(duration, [guarded] { guarded(); }); };
 }
 
-template <typename ...PointersAndLambda>
-inline base::lambda_once<void()> LambdaDelayedOnce(int duration, PointersAndLambda&&... qobjectsAndLambda) {
+template <typename... PointersAndLambda>
+inline base::lambda_once<void()> LambdaDelayedOnce(int duration, PointersAndLambda &&... qobjectsAndLambda) {
 	auto guarded = base::lambda_guarded(std::forward<PointersAndLambda>(qobjectsAndLambda)...);
 	return [guarded = std::move(guarded), duration]() mutable {
 		internal::CallDelayed(duration, [guarded = std::move(guarded)] { guarded(); });
@@ -104,24 +108,16 @@ void hideLayer(bool fast = false);
 void hideSettingsAndLayer(bool fast = false);
 bool isLayerShown();
 
-void repaintHistoryItem(not_null<const HistoryItem*> item);
+void repaintHistoryItem(not_null<const HistoryItem *> item);
 void autoplayMediaInlineAsync(const FullMsgId &msgId);
 
 void showPeerProfile(const PeerId &peer);
-inline void showPeerProfile(const PeerData *peer) {
-	showPeerProfile(peer->id);
-}
-inline void showPeerProfile(const History *history) {
-	showPeerProfile(history->peer->id);
-}
+void showPeerProfile(const PeerData *peer);
+void showPeerProfile(const History *history);
 
 void showPeerOverview(const PeerId &peer, MediaOverviewType type);
-inline void showPeerOverview(const PeerData *peer, MediaOverviewType type) {
-	showPeerOverview(peer->id, type);
-}
-inline void showPeerOverview(const History *history, MediaOverviewType type) {
-	showPeerOverview(history->peer->id, type);
-}
+void showPeerOverview(const PeerData *peer, MediaOverviewType type);
+void showPeerOverview(const History *history, MediaOverviewType type);
 
 enum class ShowWay {
 	ClearStack,
@@ -129,22 +125,12 @@ enum class ShowWay {
 	Backward,
 };
 void showPeerHistory(const PeerId &peer, MsgId msgId, ShowWay way = ShowWay::ClearStack);
-inline void showPeerHistory(const PeerData *peer, MsgId msgId, ShowWay way = ShowWay::ClearStack) {
-	showPeerHistory(peer->id, msgId, way);
-}
-inline void showPeerHistory(const History *history, MsgId msgId, ShowWay way = ShowWay::ClearStack) {
-	showPeerHistory(history->peer->id, msgId, way);
-}
-inline void showPeerHistoryAtItem(const HistoryItem *item, ShowWay way = ShowWay::ClearStack) {
-	showPeerHistory(item->history()->peer->id, item->id, way);
-}
+void showPeerHistory(const PeerData *peer, MsgId msgId, ShowWay way = ShowWay::ClearStack);
+void showPeerHistory(const History *history, MsgId msgId, ShowWay way = ShowWay::ClearStack);
+void showPeerHistoryAtItem(const HistoryItem *item, ShowWay way = ShowWay::ClearStack);
 void showPeerHistoryAsync(const PeerId &peer, MsgId msgId, ShowWay way = ShowWay::ClearStack);
-inline void showChatsList() {
-	showPeerHistory(PeerId(0), 0, ShowWay::ClearStack);
-}
-inline void showChatsListAsync() {
-	showPeerHistoryAsync(PeerId(0), 0, ShowWay::ClearStack);
-}
+void showChatsList();
+void showChatsListAsync();
 PeerData *getPeerForMouseAction();
 
 bool skipPaintEvent(QWidget *widget, QPaintEvent *event);
@@ -178,10 +164,10 @@ void unreadCounterUpdated();
 
 
 enum class ScreenCorner {
-	TopLeft     = 0,
-	TopRight    = 1,
+	TopLeft = 0,
+	TopRight = 1,
 	BottomRight = 2,
-	BottomLeft  = 3,
+	BottomLeft = 3,
 };
 
 inline bool IsLeftCorner(ScreenCorner corner) {
@@ -195,10 +181,8 @@ inline bool IsTopCorner(ScreenCorner corner) {
 } // namespace Notify
 
 #define DeclareReadOnlyVar(Type, Name) const Type &Name();
-#define DeclareRefVar(Type, Name) DeclareReadOnlyVar(Type, Name) \
-	Type &Ref##Name();
-#define DeclareVar(Type, Name) DeclareRefVar(Type, Name) \
-	void Set##Name(const Type &Name);
+#define DeclareRefVar(Type, Name) DeclareReadOnlyVar(Type, Name) Type &Ref##Name();
+#define DeclareVar(Type, Name) DeclareRefVar(Type, Name) void Set##Name(const Type &Name);
 
 namespace Sandbox {
 
@@ -250,15 +234,15 @@ constexpr auto FeaturedSetId = Q_UINT64_C(0xFFFFFFFFFFFFFFFB); // for emoji/stic
 constexpr auto FavedSetId = Q_UINT64_C(0xFFFFFFFFFFFFFFFA); // for cloud-stored faved stickers
 constexpr auto MegagroupSetId = Q_UINT64_C(0xFFFFFFFFFFFFFFEF); // for setting up megagroup sticker set
 struct Set {
-	Set(quint64 id, quint64 access, const QString &title, const QString &shortName, qint32 count, qint32 hash, MTPDstickerSet::Flags flags)
-		: id(id)
-		, access(access)
-		, title(title)
-		, shortName(shortName)
-		, count(count)
-		, hash(hash)
-		, flags(flags) {
-	}
+	Set(quint64 id, quint64 access, const QString &title, const QString &shortName, qint32 count, qint32 hash,
+	    MTPDstickerSet::Flags flags)
+	    : id(id)
+	    , access(access)
+	    , title(title)
+	    , shortName(shortName)
+	    , count(count)
+	    , hash(hash)
+	    , flags(flags) {}
 	quint64 id, access;
 	QString title, shortName;
 	qint32 count, hash;
@@ -340,7 +324,7 @@ DeclareRefVar(base::Observable<void>, PhoneCallsEnabledChanged);
 typedef QMap<PeerId, MsgId> HiddenPinnedMessagesMap;
 DeclareVar(HiddenPinnedMessagesMap, HiddenPinnedMessages);
 
-typedef OrderedSet<HistoryItem*> PendingItemsMap;
+typedef OrderedSet<HistoryItem *> PendingItemsMap;
 DeclareRefVar(PendingItemsMap, PendingRepaintItems);
 
 DeclareVar(Stickers::Sets, StickerSets);
@@ -386,7 +370,7 @@ DeclareRefVar(base::Observable<void>, LocalPasscodeChanged);
 
 DeclareRefVar(base::Variable<DBIWorkMode>, WorkMode);
 
-DeclareRefVar(base::Observable<HistoryItem*>, ItemRemoved);
+DeclareRefVar(base::Observable<HistoryItem *>, ItemRemoved);
 DeclareRefVar(base::Observable<void>, UnreadCounterUpdate);
 DeclareRefVar(base::Observable<void>, PeerChooseCancel);
 

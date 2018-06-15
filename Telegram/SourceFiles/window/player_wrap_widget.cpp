@@ -20,14 +20,13 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "window/player_wrap_widget.h"
 
+#include "facades.h"
 #include "ui/widgets/shadow.h"
 
 namespace Window {
 
-PlayerWrapWidget::PlayerWrapWidget(QWidget *parent, base::lambda<void()> updateCallback) : Parent(parent
-	, object_ptr<Media::Player::Widget>(parent)
-	, style::margins(0, 0, 0, 0)
-	, std::move(updateCallback)) {
+PlayerWrapWidget::PlayerWrapWidget(QWidget *parent, base::lambda<void()> updateCallback)
+    : Parent(parent, object_ptr<Media::Player::Widget>(parent), style::margins(0, 0, 0, 0), std::move(updateCallback)) {
 }
 
 void PlayerWrapWidget::resizeEvent(QResizeEvent *e) {

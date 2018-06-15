@@ -20,6 +20,11 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "structs.h"
+#include <QObject>
+#include <QThread>
+#include <QTimer>
+
 struct AVFrame;
 
 namespace Media {
@@ -56,7 +61,6 @@ private:
 	bool _available = false;
 	QThread _thread;
 	Inner *_inner;
-
 };
 
 Instance *instance();
@@ -93,9 +97,7 @@ private:
 	Private *d;
 	QTimer _timer;
 	QByteArray _captured;
-
 };
 
 } // namespace Capture
 } // namespace Media
-

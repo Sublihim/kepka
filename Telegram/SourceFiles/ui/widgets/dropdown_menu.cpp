@@ -22,17 +22,16 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 
 namespace Ui {
 
-DropdownMenu::DropdownMenu(QWidget *parent, const style::DropdownMenu &st) : InnerDropdown(parent, st.wrap)
-, _st(st) {
+DropdownMenu::DropdownMenu(QWidget *parent, const style::DropdownMenu &st)
+    : InnerDropdown(parent, st.wrap)
+    , _st(st) {
 	_menu = setOwnedWidget(object_ptr<Ui::Menu>(this, _st.menu));
 	init();
 }
 
 // Not ready with submenus yet.
-//DropdownMenu::DropdownMenu(QWidget *parent, QMenu *menu, const style::DropdownMenu &st) : InnerDropdown(parent, st.wrap)
-//, _st(st) {
-//	_menu = setOwnedWidget(object_ptr<Ui::Menu>(this, menu, _st.menu));
-//	init();
+// DropdownMenu::DropdownMenu(QWidget *parent, QMenu *menu, const style::DropdownMenu &st) : InnerDropdown(parent,
+// st.wrap) , _st(st) { 	_menu = setOwnedWidget(object_ptr<Ui::Menu>(this, menu, _st.menu)); 	init();
 //
 //	for (auto action : actions()) {
 //		if (auto submenu = action->menu()) {
@@ -46,12 +45,10 @@ void DropdownMenu::init() {
 	InnerDropdown::setHiddenCallback([this] { hideFinish(); });
 
 	_menu->setResizedCallback([this] { resizeToContent(); });
-	_menu->setActivatedCallback([this](QAction *action, int actionTop, TriggeredSource source) {
-		handleActivated(action, actionTop, source);
-	});
-	_menu->setTriggeredCallback([this](QAction *action, int actionTop, TriggeredSource source) {
-		handleTriggered(action, actionTop, source);
-	});
+	_menu->setActivatedCallback(
+	    [this](QAction *action, int actionTop, TriggeredSource source) { handleActivated(action, actionTop, source); });
+	_menu->setTriggeredCallback(
+	    [this](QAction *action, int actionTop, TriggeredSource source) { handleTriggered(action, actionTop, source); });
 	_menu->setKeyPressDelegate([this](int key) { return handleKeyPress(key); });
 	_menu->setMouseMoveDelegate([this](QPoint globalPosition) { handleMouseMove(globalPosition); });
 	_menu->setMousePressDelegate([this](QPoint globalPosition) { handleMousePress(globalPosition); });
@@ -62,11 +59,13 @@ void DropdownMenu::init() {
 	hide();
 }
 
-QAction *DropdownMenu::addAction(const QString &text, const QObject *receiver, const char* member, const style::icon *icon, const style::icon *iconOver) {
+QAction *DropdownMenu::addAction(const QString &text, const QObject *receiver, const char *member,
+                                 const style::icon *icon, const style::icon *iconOver) {
 	return _menu->addAction(text, receiver, member, icon, iconOver);
 }
 
-QAction *DropdownMenu::addAction(const QString &text, base::lambda<void()> callback, const style::icon *icon, const style::icon *iconOver) {
+QAction *DropdownMenu::addAction(const QString &text, base::lambda<void()> callback, const style::icon *icon,
+                                 const style::icon *iconOver) {
 	return _menu->addAction(text, std::move(callback), icon, iconOver);
 }
 
@@ -75,7 +74,7 @@ QAction *DropdownMenu::addSeparator() {
 }
 
 void DropdownMenu::clearActions() {
-	//for (auto submenu : base::take(_submenus)) {
+	// for (auto submenu : base::take(_submenus)) {
 	//	delete submenu;
 	//}
 	return _menu->clearActions();
@@ -110,7 +109,7 @@ void DropdownMenu::handleTriggered(QAction *action, int actionTop, TriggeredSour
 
 // Not ready with submenus yet.
 bool DropdownMenu::popupSubmenuFromAction(QAction *action, int actionTop, TriggeredSource source) {
-	//if (auto submenu = _submenus.value(action)) {
+	// if (auto submenu = _submenus.value(action)) {
 	//	if (_activeSubmenu == submenu) {
 	//		submenu->hideMenu(true);
 	//	} else {
@@ -121,14 +120,15 @@ bool DropdownMenu::popupSubmenuFromAction(QAction *action, int actionTop, Trigge
 	return false;
 }
 
-//void DropdownMenu::popupSubmenu(SubmenuPointer submenu, int actionTop, TriggeredSource source) {
+// void DropdownMenu::popupSubmenu(SubmenuPointer submenu, int actionTop, TriggeredSource source) {
 //	if (auto currentSubmenu = base::take(_activeSubmenu)) {
 //		currentSubmenu->hideMenu(true);
 //	}
 //	if (submenu) {
 //		auto menuTopLeft = mapFromGlobal(_menu->mapToGlobal(QPoint(0, 0)));
 //		auto menuBottomRight = mapFromGlobal(_menu->mapToGlobal(QPoint(_menu->width(), _menu->height())));
-//		QPoint p(menuTopLeft.x() + (rtl() ? (width() - menuBottomRight.x()) : menuBottomRight.x()), menuTopLeft.y() + actionTop);
+//		QPoint p(menuTopLeft.x() + (rtl() ? (width() - menuBottomRight.x()) : menuBottomRight.x()),
+//		         menuTopLeft.y() + actionTop);
 //		_activeSubmenu = submenu;
 //		_activeSubmenu->showMenu(geometry().topLeft() + p, this, source);
 //
@@ -228,15 +228,15 @@ void DropdownMenu::hideFinish() {
 }
 
 // Not ready with submenus yet.
-//void DropdownMenu::deleteOnHide(bool del) {
+// void DropdownMenu::deleteOnHide(bool del) {
 //	_deleteOnHide = del;
 //}
-
-//void DropdownMenu::popup(const QPoint &p) {
+//
+// void DropdownMenu::popup(const QPoint &p) {
 //	showMenu(p, nullptr, TriggeredSource::Mouse);
 //}
 //
-//void DropdownMenu::showMenu(const QPoint &p, DropdownMenu *parent, TriggeredSource source) {
+// void DropdownMenu::showMenu(const QPoint &p, DropdownMenu *parent, TriggeredSource source) {
 //	_parent = parent;
 //
 //	auto menuTopLeft = mapFromGlobal(_menu->mapToGlobal(QPoint(0, 0)));
@@ -244,7 +244,8 @@ void DropdownMenu::hideFinish() {
 //	auto r = Sandbox::screenGeometry(p);
 //	if (rtl()) {
 //		if (w.x() - width() < r.x() - _padding.left()) {
-//			if (_parent && w.x() + _parent->width() - _padding.left() - _padding.right() + width() - _padding.right() <= r.x() + r.width()) {
+//			if (_parent && w.x() + _parent->width() - _padding.left() - _padding.right() + width() - _padding.right() <=
+//			                   r.x() + r.width()) {
 //				w.setX(w.x() + _parent->width() - _padding.left() - _padding.right());
 //			} else {
 //				w.setX(r.x() - _padding.left());
@@ -254,8 +255,10 @@ void DropdownMenu::hideFinish() {
 //		}
 //	} else {
 //		if (w.x() + width() - _padding.right() > r.x() + r.width()) {
-//			if (_parent && w.x() - _parent->width() + _padding.left() + _padding.right() - width() + _padding.right() >= r.x() - _padding.left()) {
-//				w.setX(w.x() + _padding.left() + _padding.right() - _parent->width() - width() + _padding.left() + _padding.right());
+//			if (_parent && w.x() - _parent->width() + _padding.left() + _padding.right() - width() + _padding.right() >=
+//			                   r.x() - _padding.left()) {
+//				w.setX(w.x() + _padding.left() + _padding.right() - _parent->width() - width() + _padding.left() +
+//				       _padding.right());
 //			} else {
 //				w.setX(r.x() + r.width() - width() + _padding.right());
 //			}

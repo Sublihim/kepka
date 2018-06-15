@@ -20,8 +20,9 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
-#include "chat_helpers/tabbed_selector.h"
 #include "base/variant.h"
+#include "chat_helpers/tabbed_selector.h"
+#include "ui/effects/ripple_animation.h"
 
 namespace Window {
 class Controller;
@@ -39,7 +40,7 @@ class StickersListWidget : public TabbedSelector::Inner, private base::Subscribe
 	Q_OBJECT
 
 public:
-	StickersListWidget(QWidget *parent, not_null<Window::Controller*> controller);
+	StickersListWidget(QWidget *parent, not_null<Window::Controller *> controller);
 
 	void refreshRecent() override;
 	void preloadImages() override;
@@ -107,8 +108,7 @@ private:
 	struct OverButton {
 		int section;
 	};
-	struct OverGroupAdd {
-	};
+	struct OverGroupAdd {};
 	friend inline bool operator==(OverSticker a, OverSticker b) {
 		return (a.section == b.section) && (a.index == b.index) && (a.overDelete == b.overDelete);
 	}
@@ -133,8 +133,12 @@ private:
 	};
 
 	struct Set {
-		Set(quint64 id, MTPDstickerSet::Flags flags, const QString &title, qint32 hoversSize, const StickerPack &pack = StickerPack()) : id(id), flags(flags), title(title), pack(pack) {
-		}
+		Set(quint64 id, MTPDstickerSet::Flags flags, const QString &title, qint32 hoversSize,
+		    const StickerPack &pack = StickerPack())
+		    : id(id)
+		    , flags(flags)
+		    , title(title)
+		    , pack(pack) {}
 		quint64 id;
 		MTPDstickerSet::Flags flags;
 		QString title;
@@ -143,8 +147,7 @@ private:
 	};
 	using Sets = QList<Set>;
 
-	template <typename Callback>
-	bool enumerateSections(Callback callback) const;
+	template <typename Callback> bool enumerateSections(Callback callback) const;
 	SectionInfo sectionInfo(int section) const;
 	SectionInfo sectionInfoByOffset(int yOffset) const;
 
@@ -218,7 +221,7 @@ private:
 	Sets _featuredSets;
 	OrderedSet<quint64> _installedLocallySets;
 	QList<bool> _custom;
-	base::flat_set<not_null<DocumentData*>> _favedStickersMap;
+	base::flat_set<not_null<DocumentData *>> _favedStickersMap;
 
 	Section _section = Section::Stickers;
 
@@ -244,7 +247,6 @@ private:
 
 	QTimer _previewTimer;
 	bool _previewShown = false;
-
 };
 
 } // namespace ChatHelpers

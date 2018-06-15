@@ -20,15 +20,15 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
-#include <QtCore/QString>
-#include <QtGui/QColor>
-#include <QtCore/QPoint>
-#include <QtCore/QRect>
-#include <QtGui/QCursor>
-#include <QtGui/QFont>
+#include <QColor>
+#include <QCursor>
+#include <QFont>
+#include <QPoint>
+#include <QRect>
+#include <QString>
 
-#include "ui/style/style_core_font.h"
 #include "ui/style/style_core_color.h"
+#include "ui/style/style_core_font.h"
 #include "ui/style/style_core_icon.h"
 
 namespace style {

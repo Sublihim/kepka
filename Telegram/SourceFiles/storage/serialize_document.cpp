@@ -20,6 +20,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "storage/serialize_document.h"
 
+#include "app.h"
+#include "facades.h"
 #include "storage/serialize_common.h"
 
 namespace {
@@ -50,9 +52,7 @@ void Document::writeToStream(QDataStream &stream, DocumentData *document) {
 			stream << qint32(StickerSetTypeShortName);
 		} break;
 		case mtpc_inputStickerSetEmpty:
-		default: {
-			stream << qint32(StickerSetTypeEmpty);
-		} break;
+		default: { stream << qint32(StickerSetTypeEmpty); } break;
 		}
 		writeStorageImageLocation(stream, document->sticker()->loc);
 	} else {
@@ -90,22 +90,29 @@ DocumentData *Document::readFromStreamHelper(int streamAppVersion, QDataStream &
 		thumb = readStorageImageLocation(stream);
 
 		if (typeOfSet == StickerSetTypeEmpty) {
-			attributes.push_back(MTP_documentAttributeSticker(MTP_flags(0), MTP_string(alt), MTP_inputStickerSetEmpty(), MTPMaskCoords()));
+			attributes.push_back(MTP_documentAttributeSticker(MTP_flags(0), MTP_string(alt), MTP_inputStickerSetEmpty(),
+			                                                  MTPMaskCoords()));
 		} else if (info) {
-			if (info->setId == Stickers::DefaultSetId || info->setId == Stickers::CloudRecentSetId || info->setId == Stickers::FavedSetId || info->setId == Stickers::CustomSetId) {
+			if (info->setId == Stickers::DefaultSetId || info->setId == Stickers::CloudRecentSetId ||
+			    info->setId == Stickers::FavedSetId || info->setId == Stickers::CustomSetId) {
 				typeOfSet = StickerSetTypeEmpty;
 			}
 
 			switch (typeOfSet) {
 			case StickerSetTypeID: {
-				attributes.push_back(MTP_documentAttributeSticker(MTP_flags(0), MTP_string(alt), MTP_inputStickerSetID(MTP_long(info->setId), MTP_long(info->accessHash)), MTPMaskCoords()));
+				attributes.push_back(MTP_documentAttributeSticker(
+				    MTP_flags(0), MTP_string(alt),
+				    MTP_inputStickerSetID(MTP_long(info->setId), MTP_long(info->accessHash)), MTPMaskCoords()));
 			} break;
 			case StickerSetTypeShortName: {
-				attributes.push_back(MTP_documentAttributeSticker(MTP_flags(0), MTP_string(alt), MTP_inputStickerSetShortName(MTP_string(info->shortName)), MTPMaskCoords()));
+				attributes.push_back(MTP_documentAttributeSticker(
+				    MTP_flags(0), MTP_string(alt), MTP_inputStickerSetShortName(MTP_string(info->shortName)),
+				    MTPMaskCoords()));
 			} break;
 			case StickerSetTypeEmpty:
 			default: {
-				attributes.push_back(MTP_documentAttributeSticker(MTP_flags(0), MTP_string(alt), MTP_inputStickerSetEmpty(), MTPMaskCoords()));
+				attributes.push_back(MTP_documentAttributeSticker(MTP_flags(0), MTP_string(alt),
+				                                                  MTP_inputStickerSetEmpty(), MTPMaskCoords()));
 			} break;
 			}
 		}
@@ -122,7 +129,8 @@ DocumentData *Document::readFromStreamHelper(int streamAppVersion, QDataStream &
 			if (type == RoundVideoDocument) {
 				flags |= MTPDdocumentAttributeVideo::Flag::f_round_message;
 			}
-			attributes.push_back(MTP_documentAttributeVideo(MTP_flags(flags), MTP_int(duration), MTP_int(width), MTP_int(height)));
+			attributes.push_back(
+			    MTP_documentAttributeVideo(MTP_flags(flags), MTP_int(duration), MTP_int(width), MTP_int(height)));
 		} else {
 			attributes.push_back(MTP_documentAttributeImageSize(MTP_int(width), MTP_int(height)));
 		}
@@ -131,7 +139,8 @@ DocumentData *Document::readFromStreamHelper(int streamAppVersion, QDataStream &
 	if (!dc && !access) {
 		return nullptr;
 	}
-	return App::documentSet(id, nullptr, access, version, date, attributes, mime, thumb.isNull() ? ImagePtr() : ImagePtr(thumb), dc, size, thumb);
+	return App::documentSet(id, nullptr, access, version, date, attributes, mime,
+	                        thumb.isNull() ? ImagePtr() : ImagePtr(thumb), dc, size, thumb);
 }
 
 DocumentData *Document::readStickerFromStream(int streamAppVersion, QDataStream &stream, const StickerSetInfo &info) {

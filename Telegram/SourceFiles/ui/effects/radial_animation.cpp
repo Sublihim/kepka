@@ -19,17 +19,18 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "ui/effects/radial_animation.h"
+#include "styles/style_media_player.h"
 
 namespace Ui {
 
 RadialAnimation::RadialAnimation(AnimationCallbacks &&callbacks)
-	: a_arcStart(0, FullArcLength)
-	, _animation(std::move(callbacks)) {
-}
+    : a_arcStart(0, FullArcLength)
+    , _animation(std::move(callbacks)) {}
 
 void RadialAnimation::start(double prg) {
 	_firstStart = _lastStart = _lastTime = getms();
-	qint32 iprg = std::round(std::max(prg, 0.0001) * AlmostFullArcLength), iprgstrict = std::round(prg * AlmostFullArcLength);
+	qint32 iprg = std::round(std::max(prg, 0.0001) * AlmostFullArcLength),
+	       iprgstrict = std::round(prg * AlmostFullArcLength);
 	a_arcEnd = anim::value(iprgstrict, iprg);
 	_animation.start();
 }

@@ -21,13 +21,16 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #pragma once
 
 #include "styles/style_widgets.h"
+#include "ui/style/style_core_types.h"
+
+class Painter;
 
 namespace Ui {
 
 class CrossAnimation {
 public:
-	static void paint(Painter &p, const style::CrossAnimation &st, style::color color, int x, int y, int outerWidth, double shown, double loading = 0.);
-
+	static void paint(Painter &p, const style::CrossAnimation &st, style::color color, int x, int y, int outerWidth,
+	                  double shown, double loading = 0.);
 };
 
 } // namespace Ui

@@ -23,6 +23,10 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include "mtproto/auth_key.h"
 #include "mtproto/connection_abstract.h"
 
+#include <QAbstractSocket>
+#include <QTcpSocket>
+#include <QTimer>
+
 namespace MTP {
 namespace internal {
 
@@ -30,7 +34,6 @@ class AbstractTCPConnection : public AbstractConnection {
 	Q_OBJECT
 
 public:
-
 	AbstractTCPConnection(QThread *thread);
 	virtual ~AbstractTCPConnection() = 0;
 
@@ -39,7 +42,6 @@ public slots:
 	void socketRead();
 
 protected:
-
 	QTcpSocket sock;
 	quint32 packetNum; // sent packet number
 
@@ -53,8 +55,8 @@ protected:
 	static mtpBuffer handleResponse(const char *packet, quint32 length);
 	static void handleError(QAbstractSocket::SocketError e, QTcpSocket &sock);
 	static quint32 fourCharsToUInt(char ch1, char ch2, char ch3, char ch4) {
-		char ch[4] = { ch1, ch2, ch3, ch4 };
-		return *reinterpret_cast<quint32*>(ch);
+		char ch[4] = {ch1, ch2, ch3, ch4};
+		return *reinterpret_cast<quint32 *>(ch);
 	}
 
 	void tcpSend(mtpBuffer &buffer);
@@ -62,14 +64,12 @@ protected:
 	CTRState _sendState;
 	uchar _receiveKey[CTRState::KeySize];
 	CTRState _receiveState;
-
 };
 
 class TCPConnection : public AbstractTCPConnection {
 	Q_OBJECT
 
 public:
-
 	TCPConnection(QThread *thread);
 
 	void sendData(mtpBuffer &buffer) override;
@@ -93,16 +93,10 @@ public slots:
 	void onTcpTimeoutTimer();
 
 protected:
-
 	void socketPacket(const char *packet, quint32 length) override;
 
 private:
-
-	enum Status {
-		WaitingTcp = 0,
-		UsingTcp,
-		FinishedWork
-	};
+	enum Status { WaitingTcp = 0, UsingTcp, FinishedWork };
 	Status status;
 	MTPint128 tcpNonce;
 
@@ -110,7 +104,6 @@ private:
 	qint32 _port, _tcpTimeout;
 	MTPDdcOption::Flags _flags;
 	QTimer tcpTimeoutTimer;
-
 };
 
 } // namespace internal

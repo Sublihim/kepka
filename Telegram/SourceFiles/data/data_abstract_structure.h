@@ -20,6 +20,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "base/assertion.h"
 namespace Data {
 
 // This module suggests a way to hold global data structures, that are
@@ -42,12 +43,11 @@ namespace internal {
 
 void registerAbstractStructure(AbstractStructure **p);
 
-} // namespace
+} // namespace internal
 
-  // Must be created in global scope!
-  // Structure is derived from AbstractStructure.
-template <typename Structure>
-class GlobalStructurePointer {
+// Must be created in global scope!
+// Structure is derived from AbstractStructure.
+template <typename Structure> class GlobalStructurePointer {
 public:
 	GlobalStructurePointer() = default;
 	GlobalStructurePointer(const GlobalStructurePointer<Structure> &other) = delete;
@@ -61,11 +61,11 @@ public:
 	}
 	Structure *operator->() {
 		Assert(_p != nullptr);
-		return static_cast<Structure*>(_p);
+		return static_cast<Structure *>(_p);
 	}
 	const Structure *operator->() const {
 		Assert(_p != nullptr);
-		return static_cast<const Structure*>(_p);
+		return static_cast<const Structure *>(_p);
 	}
 	explicit operator bool() const {
 		return _p != nullptr;
@@ -73,7 +73,6 @@ public:
 
 private:
 	AbstractStructure *_p;
-
 };
 
 // This method should be called at the end of the app launch.

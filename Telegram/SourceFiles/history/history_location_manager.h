@@ -20,6 +20,15 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "core/click_handler.h"
+#include "scheme.h"
+#include "ui/images.h"
+#include <QApplication>
+#include <QClipboard>
+#include <QNetworkAccessManager>
+#include <QNetworkReply>
+#include <QString>
+
 void initLocationManager();
 void reinitLocationManager();
 void deinitLocationManager();
@@ -27,10 +36,12 @@ void deinitLocationManager();
 class LocationCoords {
 public:
 	LocationCoords() = default;
-	LocationCoords(double lat, double lon) : _lat(lat), _lon(lon) {
-	}
-	LocationCoords(const MTPDgeoPoint &point) : _lat(point.vlat.v), _lon(point.vlong.v) {
-	}
+	LocationCoords(double lat, double lon)
+	    : _lat(lat)
+	    , _lon(lon) {}
+	LocationCoords(const MTPDgeoPoint &point)
+	    : _lat(point.vlat.v)
+	    , _lon(point.vlong.v) {}
 
 	QString latAsString() const {
 		return asString(_lat);
@@ -68,12 +79,12 @@ private:
 
 	double _lat = 0;
 	double _lon = 0;
-
 };
 
 struct LocationData {
-	LocationData(const LocationCoords &coords) : coords(coords), loading(false) {
-	}
+	LocationData(const LocationCoords &coords)
+	    : coords(coords)
+	    , loading(false) {}
 
 	LocationCoords coords;
 	ImagePtr thumb;
@@ -84,7 +95,8 @@ struct LocationData {
 
 class LocationClickHandler : public ClickHandler {
 public:
-	LocationClickHandler(const LocationCoords &coords) : _coords(coords) {
+	LocationClickHandler(const LocationCoords &coords)
+	    : _coords(coords) {
 		setup();
 	}
 
@@ -106,11 +118,9 @@ public:
 	QString copyToClipboardContextItemText() const override;
 
 private:
-
 	void setup();
 	LocationCoords _coords;
 	QString _text;
-
 };
 
 class LocationManager : public QObject {
@@ -135,8 +145,7 @@ private:
 	void failed(LocationData *data);
 
 	QNetworkAccessManager *manager = nullptr;
-	QMap<QNetworkReply*, LocationData*> dataLoadings, imageLoadings;
-	QMap<LocationData*, qint32> serverRedirects;
+	QMap<QNetworkReply *, LocationData *> dataLoadings, imageLoadings;
+	QMap<LocationData *, qint32> serverRedirects;
 	ImagePtr *notLoadedPlaceholder = nullptr;
-
 };

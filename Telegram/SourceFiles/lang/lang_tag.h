@@ -20,6 +20,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include <QString>
+
 namespace Lang {
 
 constexpr auto kTagReplacementSize = 4;
@@ -33,21 +35,17 @@ struct PluralResult {
 PluralResult Plural(ushort keyBase, double value);
 void UpdatePluralRules(const QString &languageId);
 
-template <typename ResultString>
-struct StartReplacements;
+template <typename ResultString> struct StartReplacements;
 
-template <>
-struct StartReplacements<QString> {
+template <> struct StartReplacements<QString> {
 	static inline QString Call(QString &&langString) {
 		return std::move(langString);
 	}
 };
 
-template <typename ResultString>
-struct ReplaceTag;
+template <typename ResultString> struct ReplaceTag;
 
-template <>
-struct ReplaceTag<QString> {
+template <> struct ReplaceTag<QString> {
 	static inline QString Call(QString &&original, ushort tag, const QString &replacement) {
 		auto replacementPosition = FindTagReplacementPosition(original, tag);
 		if (replacementPosition < 0) {
@@ -56,7 +54,6 @@ struct ReplaceTag<QString> {
 		return Replace(std::move(original), replacement, replacementPosition);
 	}
 	static QString Replace(QString &&original, const QString &replacement, int start);
-
 };
 
 } // namespace Lang

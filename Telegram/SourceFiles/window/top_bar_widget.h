@@ -20,6 +20,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "ui/animation.h"
 #include "ui/twidget.h"
 
 namespace Ui {
@@ -37,7 +38,7 @@ class TopBarWidget : public TWidget, private base::Subscriber {
 	Q_OBJECT
 
 public:
-	TopBarWidget(QWidget *parent, not_null<Window::Controller*> controller);
+	TopBarWidget(QWidget *parent, not_null<Window::Controller *> controller);
 
 	struct SelectedState {
 		bool textSelected = false;
@@ -80,7 +81,7 @@ private:
 	void updateAdaptiveLayout();
 	int countSelectedButtonsTop(double selectedShown);
 
-	not_null<Window::Controller*> _controller;
+	not_null<Window::Controller *> _controller;
 
 	PeerData *_searchInPeer = nullptr;
 	int _selectedCount = 0;
@@ -98,12 +99,11 @@ private:
 	object_ptr<Ui::IconButton> _call;
 	object_ptr<Ui::IconButton> _search;
 	object_ptr<Ui::IconButton> _menuToggle;
-	object_ptr<Ui::DropdownMenu> _menu = { nullptr };
+	object_ptr<Ui::DropdownMenu> _menu = {nullptr};
 
-	object_ptr<TWidget> _membersShowArea = { nullptr };
+	object_ptr<TWidget> _membersShowArea = {nullptr};
 
 	int _unreadCounterSubscription = 0;
-
 };
 
 } // namespace Window

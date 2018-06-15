@@ -20,6 +20,10 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include <QMap>
+#include <QString>
+#include <QUrl>
+
 namespace qthelp {
 
 inline QString url_encode(const QString &part) {
@@ -35,6 +39,7 @@ enum class UrlParamNameTransform {
 	ToLower,
 };
 // Parses a string like "p1=v1&p2=v2&..&pn=vn" to a map.
-QMap<QString, QString> url_parse_params(const QString &params, UrlParamNameTransform transform = UrlParamNameTransform::NoTransform);
+QMap<QString, QString> url_parse_params(const QString &params,
+                                        UrlParamNameTransform transform = UrlParamNameTransform::NoTransform);
 
 } // namespace qthelp

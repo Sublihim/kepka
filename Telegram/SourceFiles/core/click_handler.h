@@ -20,6 +20,12 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include <QSharedPointer>
+
+#include "base/lambda.h"
+#include "core/utils.h"
+#include "ui/text/text_entity.h"
+
 class ClickHandler;
 using ClickHandlerPtr = QSharedPointer<ClickHandler>;
 
@@ -32,21 +38,17 @@ enum ExpandLinksMode {
 
 class ClickHandlerHost {
 protected:
-	virtual void clickHandlerActiveChanged(const ClickHandlerPtr &action, bool active) {
-	}
-	virtual void clickHandlerPressedChanged(const ClickHandlerPtr &action, bool pressed) {
-	}
+	virtual void clickHandlerActiveChanged(const ClickHandlerPtr &action, bool active) {}
+	virtual void clickHandlerPressedChanged(const ClickHandlerPtr &action, bool pressed) {}
 	virtual ~ClickHandlerHost() = 0;
 	friend class ClickHandler;
-
 };
 
 class EntityInText;
-struct TextWithEntities;
+
 class ClickHandler {
 public:
-	virtual ~ClickHandler() {
-	}
+	virtual ~ClickHandler() {}
 
 	virtual void onClick(Qt::MouseButton) const = 0;
 
@@ -61,8 +63,7 @@ public:
 	}
 
 	// Copy to clipboard support.
-	virtual void copyToClipboard() const {
-	}
+	virtual void copyToClipboard() const {}
 	virtual QString copyToClipboardContextItemText() const {
 		return QString();
 	}
@@ -71,7 +72,8 @@ public:
 
 	// This method returns empty string if just textPart should be used (nothing to expand).
 	virtual QString getExpandedLinkText(ExpandLinksMode mode, const QStringRef &textPart) const;
-	virtual TextWithEntities getExpandedLinkTextWithEntities(ExpandLinksMode mode, int entityOffset, const QStringRef &textPart) const;
+	virtual TextWithEntities getExpandedLinkTextWithEntities(ExpandLinksMode mode, int entityOffset,
+	                                                         const QStringRef &textPart) const;
 
 	// This method should be called on mouse over a click handler.
 	// It returns true if the active handler was changed or false otherwise.
@@ -163,7 +165,6 @@ private:
 	static NeverFreedPointer<ClickHandlerPtr> _pressed;
 	static ClickHandlerHost *_activeHost;
 	static ClickHandlerHost *_pressedHost;
-
 };
 
 class LeftButtonClickHandler : public ClickHandler {
@@ -175,13 +176,12 @@ public:
 
 protected:
 	virtual void onClickImpl() const = 0;
-
 };
 
 class LambdaClickHandler : public ClickHandler {
 public:
-	LambdaClickHandler(base::lambda<void()> handler) : _handler(std::move(handler)) {
-	}
+	LambdaClickHandler(base::lambda<void()> handler)
+	    : _handler(std::move(handler)) {}
 	void onClick(Qt::MouseButton button) const override final {
 		if (button == Qt::LeftButton && _handler) {
 			_handler();
@@ -190,5 +190,4 @@ public:
 
 private:
 	base::lambda<void()> _handler;
-
 };

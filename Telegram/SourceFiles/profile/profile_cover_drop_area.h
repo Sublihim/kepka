@@ -20,6 +20,11 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "ui/animation.h"
+#include "ui/twidget.h"
+
+class QPaintEvent;
+
 namespace Profile {
 
 class CoverDropArea : public TWidget {
@@ -28,7 +33,7 @@ public:
 
 	void showAnimated();
 
-	using HideFinishCallback = base::lambda<void(CoverDropArea*)>;
+	using HideFinishCallback = base::lambda<void(CoverDropArea *)>;
 	void hideAnimated(HideFinishCallback &&callback);
 
 	bool hiding() const {
@@ -48,7 +53,6 @@ private:
 	Animation _a_appearance;
 	bool _hiding = false;
 	HideFinishCallback _hideFinishCallback;
-
 };
 
 } // namespace Profile

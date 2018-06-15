@@ -20,6 +20,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "ui/twidget.h"
 namespace Ui {
 class LabelSimple;
 class FadeAnimation;
@@ -72,8 +73,7 @@ private:
 	void handleSeekProgress(double progress);
 	void handleSeekFinished(double progress);
 
-	template <typename Callback>
-	void startFading(Callback start);
+	template <typename Callback> void startFading(Callback start);
 	void fadeFinished();
 	void fadeUpdated(double opacity);
 
@@ -95,7 +95,6 @@ private:
 	object_ptr<Ui::LabelSimple> _toPlayLeft;
 
 	std::unique_ptr<Ui::FadeAnimation> _fadeAnimation;
-
 };
 
 } // namespace Clip

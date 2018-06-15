@@ -18,6 +18,9 @@
 #pragma once
 
 #include "base/timer.h"
+#include "ui/animation.h"
+#include "ui/text/text.h"
+#include "ui/twidget.h"
 
 namespace style {
 struct Tooltip;
@@ -33,7 +36,6 @@ public:
 	virtual bool tooltipWindowActive() const;
 	virtual const style::Tooltip *tooltipSt() const;
 	virtual ~AbstractTooltipShower();
-
 };
 
 class Tooltip : public TWidget {
@@ -72,7 +74,6 @@ private:
 	base::Timer _hideByLeaveTimer;
 	bool _isEventFilter = false;
 	bool _useTransparency = true;
-
 };
 
 class ImportantTooltip : public TWidget {
@@ -114,7 +115,6 @@ private:
 	base::lambda<void()> _hiddenCallback;
 	bool _useTransparency = true;
 	QPixmap _cache;
-
 };
 
 } // namespace Ui

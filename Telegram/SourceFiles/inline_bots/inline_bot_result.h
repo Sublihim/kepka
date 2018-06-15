@@ -24,6 +24,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include "structs.h"
 
 class FileLoader;
+class History;
+class LocationCoords;
 
 namespace InlineBots {
 
@@ -41,7 +43,6 @@ private:
 	struct Creator;
 
 public:
-
 	// Constructor is public only for std::make_unique<>() to work.
 	// You should use create() static method instead.
 	explicit Result(const Creator &creator);
@@ -66,7 +67,8 @@ public:
 
 	bool hasThumbDisplay() const;
 
-	void addToHistory(History *history, MTPDmessage::Flags flags, MsgId msgId, UserId fromId, MTPint mtpDate, UserId viaBotId, MsgId replyToId, const QString &postAuthor) const;
+	void addToHistory(History *history, MTPDmessage::Flags flags, MsgId msgId, UserId fromId, MTPint mtpDate,
+	                  UserId viaBotId, MsgId replyToId, const QString &postAuthor) const;
 	QString getErrorOnSend(History *history) const;
 
 	// interface for Layout:: usage
@@ -121,7 +123,6 @@ private:
 	ImagePtr _thumb, _locationThumb;
 
 	std::unique_ptr<internal::SendData> sendData;
-
 };
 
 } // namespace InlineBots

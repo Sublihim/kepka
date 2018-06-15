@@ -20,6 +20,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "platform/linux/linux_libnotify.h"
 
+#include "logs.h"
+
 #include "platform/linux/linux_libs.h"
 
 namespace Platform {
@@ -27,19 +29,19 @@ namespace Libs {
 namespace {
 
 bool loadLibrary(QLibrary &lib, const char *name, int version) {
-    DEBUG_LOG(("Loading '%1' with version %2...").arg(QLatin1String(name)).arg(version));
-    lib.setFileNameAndVersion(QLatin1String(name), version);
-    if (lib.load()) {
-        DEBUG_LOG(("Loaded '%1' with version %2!").arg(QLatin1String(name)).arg(version));
-        return true;
-    }
-    lib.setFileNameAndVersion(QLatin1String(name), QString());
-    if (lib.load()) {
-        DEBUG_LOG(("Loaded '%1' without version!").arg(QLatin1String(name)));
-        return true;
-    }
-    LOG(("Could not load '%1' with version %2 :(").arg(QLatin1String(name)).arg(version));
-    return false;
+	DEBUG_LOG(("Loading '%1' with version %2...").arg(QLatin1String(name)).arg(version));
+	lib.setFileNameAndVersion(QLatin1String(name), version);
+	if (lib.load()) {
+		DEBUG_LOG(("Loaded '%1' with version %2!").arg(QLatin1String(name)).arg(version));
+		return true;
+	}
+	lib.setFileNameAndVersion(QLatin1String(name), QString());
+	if (lib.load()) {
+		DEBUG_LOG(("Loaded '%1' without version!").arg(QLatin1String(name)));
+		return true;
+	}
+	LOG(("Could not load '%1' with version %2 :(").arg(QLatin1String(name)).arg(version));
+	return false;
 }
 
 } // namespace

@@ -20,6 +20,18 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "ui/twidget.h"
+#include "ui/widgets/scroll_area.h"
+
+#include <QPointer>
+
+class QWidget;
+class QString;
+class QPaintEvent;
+class QResizeEvent;
+class QKeyEvent;
+class QFocusEvent;
+
 class BoxLayerTitleShadow;
 
 namespace Ui {
@@ -36,7 +48,7 @@ class Editor : public TWidget {
 	Q_OBJECT
 
 public:
-	Editor(QWidget*, const QString &path);
+	Editor(QWidget *, const QString &path);
 
 	static void Start();
 
@@ -58,7 +70,6 @@ private:
 	object_ptr<BoxLayerTitleShadow> _leftShadow;
 	object_ptr<BoxLayerTitleShadow> _topShadow;
 	object_ptr<Ui::FlatButton> _export;
-
 };
 
 } // namespace Theme

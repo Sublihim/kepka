@@ -20,7 +20,16 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "base/object_ptr.h"
 #include "base/observer.h"
+#include "ui/twidget.h"
+
+class PeerData;
+class UserData;
+class ChatData;
+class ChannelData;
+
+class QMouseEvent;
 
 namespace Notify {
 struct PeerUpdate;
@@ -105,7 +114,6 @@ private:
 
 	bool _animatingMode = false;
 	bool _hideShareContactButton = false;
-
 };
 
 } // namespace Profile

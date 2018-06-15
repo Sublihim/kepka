@@ -20,21 +20,20 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include <utility>
+
 namespace base {
 namespace functors {
 
 struct abs_helper {
-	template <typename Type,
-		typename = decltype(0 < std::declval<Type>()),
-		typename = decltype(-std::declval<Type>())>
-		constexpr Type operator()(Type value) const {
+	template <typename Type, typename = decltype(0 < std::declval<Type>()), typename = decltype(-std::declval<Type>())>
+	constexpr Type operator()(Type value) const {
 		return (0 < value) ? value : (-value);
 	}
 };
-constexpr auto abs = abs_helper {};
+constexpr auto abs = abs_helper{};
 
-template <typename Type>
-inline auto add(Type a) {
+template <typename Type> inline auto add(Type a) {
 	return [a](auto b) { return a + b; };
 };
 

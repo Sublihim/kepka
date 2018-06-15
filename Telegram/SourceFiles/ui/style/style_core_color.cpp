@@ -19,6 +19,7 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "ui/style/style_core_color.h"
+#include "styles/palette.h"
 
 namespace style {
 namespace internal {
@@ -28,8 +29,10 @@ Color::Proxy Color::operator[](const style::palette &paletteOverride) const {
 	return Proxy((index >= 0) ? paletteOverride.colorAtIndex(index) : (*this));
 }
 
-ColorData::ColorData(uchar r, uchar g, uchar b, uchar a) : c(int(r), int(g), int(b), int(a)), p(c), b(c) {
-}
+ColorData::ColorData(uchar r, uchar g, uchar b, uchar a)
+    : c(int(r), int(g), int(b), int(a))
+    , p(c)
+    , b(c) {}
 
 void ColorData::set(uchar r, uchar g, uchar b, uchar a) {
 	this->c = QColor(int(r), int(g), int(b), int(a));

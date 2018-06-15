@@ -20,7 +20,14 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include <QPaintEvent>
+#include <gsl/gsl>
+
+#include "ui/twidget.h"
+
 #include "base/observer.h"
+
+class PeerData;
 
 namespace Profile {
 
@@ -32,18 +39,14 @@ class BlockWidget : public TWidget, protected base::Subscriber {
 public:
 	BlockWidget(QWidget *parent, PeerData *peer, const QString &title);
 
-	virtual void showFinished() {
-	}
+	virtual void showFinished() {}
 
-	virtual void saveState(not_null<SectionMemento*> memento) {
-	}
-	virtual void restoreState(not_null<SectionMemento*> memento) {
-	}
+	virtual void saveState(gsl::not_null<SectionMemento *> memento) {}
+	virtual void restoreState(gsl::not_null<SectionMemento *> memento) {}
 
 protected:
 	void paintEvent(QPaintEvent *e) override;
-	virtual void paintContents(Painter &p) {
-	}
+	virtual void paintContents(Painter &p) {}
 
 	// Where does the block content start (after the title).
 	int contentTop() const;
@@ -52,7 +55,6 @@ protected:
 	int resizeGetHeight(int newWidth) override = 0;
 
 	void contentSizeUpdated() {
-		auto oldHeight = height();
 		resizeToWidth(width());
 		emit heightUpdated();
 	}
@@ -70,7 +72,6 @@ private:
 
 	PeerData *_peer;
 	QString _title;
-
 };
 
 int defaultOutlineButtonLeft();

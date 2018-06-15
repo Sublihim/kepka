@@ -21,6 +21,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #pragma once
 
 #include "boxes/abstract_box.h"
+#include "facades.h"
 
 namespace Ui {
 class LinkButton;
@@ -29,7 +30,7 @@ class SettingsSlider;
 
 class NotificationsBox : public BoxContent {
 public:
-	NotificationsBox(QWidget*);
+	NotificationsBox(QWidget *);
 	~NotificationsBox();
 
 protected:
@@ -73,6 +74,5 @@ private:
 	int _oldCount;
 	object_ptr<Ui::SettingsSlider> _countSlider;
 
-	QVector<SampleWidget*> _cornerSamples[4];
-
+	QVector<SampleWidget *> _cornerSamples[4];
 };

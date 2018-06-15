@@ -19,13 +19,21 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
+#include "core/utils.h"
+#include "ui/animation.h"
+#include <QMargins>
+#include <QString>
+
+class QWidget;
+
+class Config;
 
 namespace Ui {
 namespace Toast {
 
 namespace internal {
-	class Manager;
-	class Widget;
+class Manager;
+class Widget;
 } // namespace internal
 
 static constexpr const int DefaultDuration = 1500;
@@ -40,11 +48,9 @@ void Show(const Config &config);
 void Show(const QString &text);
 
 class Instance {
-	struct Private {
-	};
+	struct Private {};
 
 public:
-
 	Instance(const Config &config, QWidget *widgetParent, const Private &);
 	Instance(const Instance &other) = delete;
 	Instance &operator=(const Instance &other) = delete;
@@ -64,7 +70,6 @@ private:
 	friend class internal::Manager;
 	friend void Show(QWidget *parent, const Config &config);
 	std::unique_ptr<internal::Widget> _widget;
-
 };
 
 } // namespace Toast

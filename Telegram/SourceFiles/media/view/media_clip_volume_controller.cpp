@@ -19,13 +19,18 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "media/view/media_clip_volume_controller.h"
-
+#include "app.h"
+#include "facades.h"
 #include "styles/style_mediaview.h"
+#include "ui/twidget.h"
+#include <QMouseEvent>
+#include <QWindow>
 
 namespace Media {
 namespace Clip {
 
-VolumeController::VolumeController(QWidget *parent) : TWidget(parent) {
+VolumeController::VolumeController(QWidget *parent)
+    : TWidget(parent) {
 	resize(st::mediaviewVolumeSize);
 	setCursor(style::cur_pointer);
 	setMouseTracking(true);

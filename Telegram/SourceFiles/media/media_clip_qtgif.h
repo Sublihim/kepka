@@ -19,6 +19,7 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
+#include <QImageReader>
 
 #include "media/media_clip_implementation.h"
 
@@ -28,7 +29,6 @@ namespace internal {
 
 class QtGifReaderImplementation : public ReaderImplementation {
 public:
-
 	QtGifReaderImplementation(FileLocation *location, QByteArray *data);
 
 	ReadResult readFramesTill(TimeMs frameMs, TimeMs systemMs) override;
@@ -59,7 +59,6 @@ private:
 	TimeMs _frameTime = 0;
 	int _frameDelay = 0;
 	QImage _frame;
-
 };
 
 } // namespace internal

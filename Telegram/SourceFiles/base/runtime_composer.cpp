@@ -19,13 +19,12 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "base/runtime_composer.h"
+#include <QMutexLocker>
 
 struct RuntimeComposerMetadatasMap {
-	QMap<quint64, RuntimeComposerMetadata*> data;
+	QMap<quint64, RuntimeComposerMetadata *> data;
 	~RuntimeComposerMetadatasMap() {
-		for_const (const RuntimeComposerMetadata *p, data) {
-			delete p;
-		}
+		for_const (const RuntimeComposerMetadata *p, data) { delete p; }
 	}
 };
 

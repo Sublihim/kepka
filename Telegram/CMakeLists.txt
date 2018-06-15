@@ -12,6 +12,9 @@ if (PACKAGED_BUILD)
     add_definitions(-DTDESKTOP_DISABLE_DESKTOP_FILE_GENERATION)
 endif()
 
+
+#set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -H")
+
 ##================================================
 ## Codegen Tools
 ##================================================
@@ -181,16 +184,14 @@ configure_file(SourceFiles/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
 include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 ##================================================
-## Telegram app
+## Kepka app
 ##================================================
 
 #add_subdirectory(SourceFiles/boxes)
 # ^ Unused: cotire PCH needs more rigid structure with targets defined from the same
 # cmakelists file. To do: get rid of the PCH requirement for more flexible build structure.
 
-add_executable(Telegram WIN32 MACOSX_BUNDLE
-    SourceFiles/stdafx.cpp
-
+add_executable(Kepka WIN32 MACOSX_BUNDLE
     ${CMAKE_CURRENT_BINARY_DIR}/styles/palette.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/numbers.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/lang_auto.cpp
@@ -484,7 +485,7 @@ add_executable(Telegram WIN32 MACOSX_BUNDLE
 )
 
 if (APPLE)
-    target_sources(Telegram PRIVATE
+    target_sources(Kepka PRIVATE
         SourceFiles/platform/mac/file_utilities_mac.mm
         SourceFiles/platform/mac/mac_utilities.mm
         SourceFiles/platform/mac/main_window_mac.mm
@@ -497,7 +498,7 @@ if (APPLE)
 endif()
 
 if (WIN32)
-    target_sources(Telegram PRIVATE
+    target_sources(Kepka PRIVATE
         SourceFiles/platform/win/audio_win.cpp
         SourceFiles/platform/win/file_utilities_win.cpp
         SourceFiles/platform/win/main_window_win.cpp
@@ -514,13 +515,13 @@ if (WIN32)
 endif()
 
 if (WINRT)
-    target_sources(Telegram PRIVATE
+    target_sources(Kepka PRIVATE
         SourceFiles/platform/winrt/main_window_winrt.cpp
     )
 endif()
 
 if (LINUX)
-    target_sources(Telegram PRIVATE
+    target_sources(Kepka PRIVATE
         SourceFiles/platform/linux/file_utilities_linux.cpp
         SourceFiles/platform/linux/linux_desktop_environment.cpp
         SourceFiles/platform/linux/linux_gdk_helper.cpp
@@ -541,20 +542,20 @@ list(APPEND tg_RESOURCES
 
 qt5_add_resources(tg_RESOURCES_RCC ${tg_RESOURCES})
 
-target_sources(Telegram PRIVATE
+target_sources(Kepka PRIVATE
     ${tg_RESOURCES}
     ${tg_RESOURCES_RCC}
 )
 
 if (APPLE)
-    target_sources(Telegram PRIVATE
+    target_sources(Kepka PRIVATE
         ThirdParty/SPMediaKeyTap/SPMediaKeyTap.m
         ThirdParty/SPMediaKeyTap/SPInvocationGrabbing/NSObject+SPInvocationGrabbing.m
     )
     include_directories(ThirdParty/SPMediaKeyTap)
 endif()
 
-target_sources(Telegram PRIVATE
+target_sources(Kepka PRIVATE
     ThirdParty/minizip/ioapi.c
     ThirdParty/minizip/zip.c
     ThirdParty/minizip/unzip.c
@@ -568,7 +569,7 @@ include_directories(ThirdParty) # For minizip/ but we use fully-qualified
 include_directories(ThirdParty/GSL/include ThirdParty/variant/include
     ThirdParty/emoji_suggestions ThirdParty/libtgvoip)
 
-include_directories(SourceFiles SourceFiles/core)
+include_directories(SourceFiles)
 
 include_directories(${OPENAL_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
     ${OPUS_INCLUDE_DIR} ${FFMPEG_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS} ${PULSEAUDIO_INCLUDE_DIR})
@@ -581,9 +582,9 @@ endif()
 
 if (WIN32)
     add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_USING_V110_SDK71_
-        -DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE 
+        -DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE
         -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
-        -DHAVE_STDINT_H)
+        -DHAVE_STDINT_H -DNOMINMAX)
 endif()
 
 add_definitions(-DAL_LIBTYPE_STATIC)
@@ -619,7 +620,7 @@ if (APPLE)
         PROPERTIES
             MACOSX_PACKAGE_LOCATION Resources)
 
-    target_sources(Telegram PRIVATE
+    target_sources(Kepka PRIVATE
         ${CMAKE_CURRENT_BINARY_DIR}/${MACOSX_BUNDLE_ICON_FILE}
     )
 
@@ -628,7 +629,7 @@ if (APPLE)
         set_source_files_properties(${LOCALIZABLE_STRINGS}
             PROPERTIES
                 MACOSX_PACKAGE_LOCATION ${LOCALIZABLE_STRINGS})
-        target_sources(Telegram PRIVATE
+        target_sources(Kepka PRIVATE
             ${LOCALIZABLE_STRINGS}
         )
     endforeach(langpack)
@@ -636,12 +637,12 @@ endif()
 
 # Disable a single annoying warning about c++17
 if(NOT WIN32)
-    set_flag_if_supported(Telegram WNCE -Wno-c++1z-extensions)
+    set_flag_if_supported(Kepka WNCE -Wno-c++1z-extensions)
 endif()
 
-target_compile_definitions(Telegram PRIVATE ${FFMPEG_DEFINITIONS})
+target_compile_definitions(Kepka PRIVATE ${FFMPEG_DEFINITIONS})
 
-target_link_libraries(Telegram
+target_link_libraries(Kepka
     Qt5::Core
     Qt5::Widgets
     Qt5::Network
@@ -658,9 +659,9 @@ target_link_libraries(Telegram
 ) # crashpad::crashpad_client)
 
 if (APPLE)
-    add_dependencies(Telegram iconset_output)
+    add_dependencies(Kepka iconset_output)
 
-    set_target_properties(Telegram
+    set_target_properties(Kepka
         PROPERTIES
             MACOSX_BUNDLE_INFO_PLIST ${CMAKE_CURRENT_SOURCE_DIR}/Telegram.plist
     )
@@ -688,34 +689,49 @@ if (APPLE)
         set(FW_LIB FW_LIB-NOTFOUND)
         find_library(FW_LIB ${framework})
         message(STATUS "Found framework ${FW_LIB}")
-        target_link_libraries(Telegram ${FW_LIB})
+        target_link_libraries(Kepka ${FW_LIB})
     endforeach(framework)
     set(FW_LIB FW_LIB-NOTFOUND)
 endif()
 
 if(WIN32)
-    target_link_libraries(Telegram
+    target_link_libraries(Kepka
         winmm imm32 ws2_32 kernel32 user32 gdi32 winspool comdlg32 advapi32 shell32 ole32
         oleaut32 uuid odbc32 odbccp32 Shlwapi Iphlpapi Gdiplus Strmiids
     )
 endif()
 
 if (LINUX)
-    target_link_libraries(Telegram Qt5::DBus dl ${ALSA_LIBRARIES} ${PULSEAUDIO_LIBRARIES})
+    target_link_libraries(Kepka Qt5::DBus dl ${ALSA_LIBRARIES} ${PULSEAUDIO_LIBRARIES})
 endif()
 
-target_link_libraries(Telegram Threads::Threads)
+target_link_libraries(Kepka Threads::Threads)
 
-set_target_properties(Telegram
-    PROPERTIES
-        COTIRE_CXX_PREFIX_HEADER_INIT SourceFiles/stdafx.h
-        COTIRE_ADD_UNITY_BUILD FALSE
+##================================================
+## Installlation
+##================================================
+
+include(GNUInstallDirs)
+
+set_target_properties(Kepka PROPERTIES OUTPUT_NAME "kepka")
+install(TARGETS Kepka RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+
+install(FILES "${CMAKE_SOURCE_DIR}/lib/xdg/kepka.desktop"
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
 )
-cotire(Telegram)
+install(FILES "${CMAKE_SOURCE_DIR}/lib/xdg/tg.protocol"
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/kservices5/tg.protocol
+)
+install(FILES "${CMAKE_SOURCE_DIR}/lib/xdg/kepka.appdata.xml"
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo
+)
 
-# See https://github.com/sakra/cotire/blob/master/MANUAL.md#objective-c
-# ObjC and ObjC++ files cannot be cotired, so they have to include appropriate Qt and Tg
-# headers themselves, this applies to macOS platform sources.
+foreach(icon_size 16 32 48 64 128 256 512)
+    install(FILES "${CMAKE_SOURCE_DIR}/Telegram/Resources/art/icon${icon_size}.png"
+        DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/icons/hicolor/${icon_size}x${icon_size}/apps
+        RENAME kepka.png
+    )
+endforeach(icon_size)
 
 ##================================================
 ## Tests

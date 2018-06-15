@@ -24,13 +24,13 @@ namespace codegen {
 namespace emoji {
 namespace {
 
-using std::vector;
-using std::map;
-using std::find;
-using std::make_pair;
-using std::move;
 using std::begin;
 using std::end;
+using std::find;
+using std::make_pair;
+using std::map;
+using std::move;
+using std::vector;
 
 using InputId = vector<quint32>;
 using InputCategory = vector<InputId>;
@@ -40,7 +40,7 @@ struct Replace {
 	InputId code;
 	const char *replace;
 };
-
+// clang-format off
 Replace Replaces[] = {
 	{ { 0xD83DDE0AU }, ":-)" },
 	{ { 0xD83DDE0DU }, "8-)" },
@@ -1696,7 +1696,7 @@ InputCategory Category7 = {
  { 0xD83CDDFFU, 0xD83CDDF2U, },
  { 0xD83CDDFFU, 0xD83CDDFCU, },
 };
-
+// clang-format on
 constexpr auto kErrorBadData = 401;
 
 void append(Id &id, quint32 code) {
@@ -1832,17 +1832,17 @@ void fillReplaces(Data &result) {
 }
 
 bool AddItemBeforeItem(const InputId &add, const InputId &before) {
-	auto addToCategory = (InputCategory*)nullptr;
+	auto addToCategory = (InputCategory *)nullptr;
 	auto addBeforeIterator = InputCategory::iterator();
 	for (auto category : {
-		&Category1,
-		&Category2,
-		&Category3,
-		&Category4,
-		&Category5,
-		&Category6,
-		&Category7,
-	}) {
+	         &Category1,
+	         &Category2,
+	         &Category3,
+	         &Category4,
+	         &Category5,
+	         &Category6,
+	         &Category7,
+	     }) {
 		for (auto i = category->begin(), e = category->end(); i != e; ++i) {
 			if (*i == add) {
 				return true;
@@ -1874,19 +1874,19 @@ Data PrepareData() {
 	}
 
 	// Manually add :speech_left: emoji before eye-with-speech emoji.
-	if (!AddItemBeforeItem({ 0xD83DDDE8U }, { 0xD83DDC41U, 0x200DU, 0xD83DDDE8U })) {
+	if (!AddItemBeforeItem({0xD83DDDE8U}, {0xD83DDC41U, 0x200DU, 0xD83DDDE8U})) {
 		return Data();
 	}
 
 	for (auto category : {
-		&Category1,
-		&Category2,
-		&Category3,
-		&Category4,
-		&Category5,
-		&Category6,
-		&Category7,
-	}) {
+	         &Category1,
+	         &Category2,
+	         &Category3,
+	         &Category4,
+	         &Category5,
+	         &Category6,
+	         &Category7,
+	     }) {
 		appendCategory(result, *category, variatedIds);
 		if (result.list.empty()) {
 			return Data();

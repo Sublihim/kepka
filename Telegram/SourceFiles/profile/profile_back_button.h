@@ -20,6 +20,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "base/observer.h"
 #include "ui/abstract_button.h"
 
 namespace Profile {
@@ -41,7 +42,6 @@ private:
 
 	int _unreadCounterSubscription = 0;
 	QString _text;
-
 };
 
 } // namespace Profile

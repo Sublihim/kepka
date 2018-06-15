@@ -22,6 +22,11 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 
 #include "platform/platform_main_window.h"
 
+#include <QTimer>
+
+class QSystemTrayIcon;
+class QMenu;
+
 namespace Platform {
 
 class MainWindow : public Window::MainWindow {
@@ -34,8 +39,7 @@ public:
 	void psInitSysMenu();
 	void psUpdateMargins();
 
-	void psRefreshTaskbarIcon() {
-	}
+	void psRefreshTaskbarIcon() {}
 
 	virtual QImage iconWithCounter(int size, int count, style::color bg, style::color fg, bool smallIcon) = 0;
 
@@ -62,7 +66,8 @@ protected:
 	void psTrayMenuUpdated();
 	void psSetupTrayIcon();
 
-	virtual void placeSmallCounter(QImage &img, int size, int count, style::color bg, const QPoint &shift, style::color color) = 0;
+	virtual void placeSmallCounter(QImage &img, int size, int count, style::color bg, const QPoint &shift,
+	                               style::color color) = 0;
 
 private:
 	void updateIconCounters();
@@ -73,7 +78,6 @@ private:
 
 	QTimer _psUpdateIndicatorTimer;
 	TimeMs _psLastIndicatorUpdate = 0;
-
 };
 
 } // namespace Platform

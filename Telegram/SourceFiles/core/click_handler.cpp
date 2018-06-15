@@ -19,6 +19,7 @@ Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #include "core/click_handler.h"
+#include "ui/text/text_entity.h"
 
 ClickHandlerHost::~ClickHandlerHost() {
 	ClickHandler::hostDestroyed(this);
@@ -65,8 +66,9 @@ QString ClickHandler::getExpandedLinkText(ExpandLinksMode mode, const QStringRef
 	return QString();
 }
 
-TextWithEntities ClickHandler::getExpandedLinkTextWithEntities(ExpandLinksMode mode, int entityOffset, const QStringRef &textPart) const {
-	return { QString(), EntitiesInText() };
+TextWithEntities ClickHandler::getExpandedLinkTextWithEntities(ExpandLinksMode mode, int entityOffset,
+                                                               const QStringRef &textPart) const {
+	return {QString(), EntitiesInText()};
 }
 
 TextWithEntities ClickHandler::simpleTextWithEntity(const EntityInText &entity) const {

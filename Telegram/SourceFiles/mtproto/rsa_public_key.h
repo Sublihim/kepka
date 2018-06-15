@@ -20,6 +20,9 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "core/utils.h"
+#include <memory>
+
 namespace MTP {
 namespace internal {
 
@@ -49,7 +52,6 @@ public:
 private:
 	class Private;
 	std::shared_ptr<Private> _private;
-
 };
 
 } // namespace internal

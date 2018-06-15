@@ -20,6 +20,8 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include <QMap>
+
 namespace Dialogs {
 
 class Row;
@@ -28,11 +30,11 @@ using RowsByLetter = QMap<QChar, Row*>;
 enum class SortMode {
 	Date = 0x00,
 	Name = 0x01,
-	Add  = 0x02,
+	Add = 0x02,
 };
 
 enum class Mode {
-	All       = 0x00,
+	All = 0x00,
 	Important = 0x01,
 };
 

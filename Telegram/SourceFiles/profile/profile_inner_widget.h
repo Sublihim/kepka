@@ -20,6 +20,15 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
 #pragma once
 
+#include "ui/twidget.h"
+#include <gsl/gsl>
+
+class PeerData;
+
+class QWidget;
+class QPaintEvent;
+class QKeyEvent;
+
 namespace Profile {
 
 class CoverWidget;
@@ -49,8 +58,8 @@ public:
 	// It should show it only if it is hidden in the cover.
 	bool shareContactButtonShown() const;
 
-	void saveState(not_null<SectionMemento*> memento);
-	void restoreState(not_null<SectionMemento*> memento);
+	void saveState(gsl::not_null<SectionMemento *> memento);
+	void restoreState(gsl::not_null<SectionMemento *> memento);
 
 	void showFinished();
 
@@ -111,7 +120,6 @@ private:
 	QList<Block> _blocks;
 
 	Mode _mode = Mode::OneColumn;
-
 };
 
 } // namespace Profile
