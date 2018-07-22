@@ -358,9 +358,9 @@ public:
 
 	QString name;
 	Text nameText;
-	using Names = OrderedSet<QString>;
+	using Names = std::set<QString>;
 	Names names; // for filtering
-	using NameFirstChars = OrderedSet<QChar>;
+	using NameFirstChars = std::set<QChar>;
 	NameFirstChars chars;
 
 	enum LoadedStatus {
@@ -651,10 +651,10 @@ public:
 		return flags & MTPDchat::Flag::f_migrated_to;
 	}
 	QMap<not_null<UserData *>, int> participants;
-	OrderedSet<not_null<UserData *>> invitedByMe;
-	OrderedSet<not_null<UserData *>> admins;
+	std::set<not_null<UserData *>> invitedByMe;
+	std::set<not_null<UserData *>> admins;
 	QList<not_null<UserData *>> lastAuthors;
-	OrderedSet<not_null<PeerData *>> markupSenders;
+	std::set<not_null<PeerData *>> markupSenders;
 	int botStatus = 0; // -1 - no bots, 0 - unknown, 1 - one bot, that sees all history, 2 - other
 	//	ImagePtr photoFull;
 
@@ -750,8 +750,8 @@ struct MegagroupInfo {
 	QList<not_null<UserData *>> lastParticipants;
 	QMap<not_null<UserData *>, Admin> lastAdmins;
 	QMap<not_null<UserData *>, Restricted> lastRestricted;
-	OrderedSet<not_null<PeerData *>> markupSenders;
-	OrderedSet<not_null<UserData *>> bots;
+	std::set<not_null<PeerData *>> markupSenders;
+	std::set<not_null<UserData *>> bots;
 
 	UserData *creator = nullptr; // nullptr means unknown
 	int botStatus = 0; // -1 - no bots, 0 - unknown, 1 - one bot, that sees all history, 2 - other
@@ -1320,17 +1320,17 @@ public:
 		return (type == RoundVideoDocument);
 	}
 	bool isAnimation() const {
-		return (type == AnimatedDocument) || isRoundVideo() || !mime.compare(qstr("image/gif"), Qt::CaseInsensitive);
+		return (type == AnimatedDocument) || isRoundVideo() || hasMimeType(qstr("image/gif"));
 	}
 	bool isGifv() const {
-		return (type == AnimatedDocument) && !mime.compare(qstr("video/mp4"), Qt::CaseInsensitive);
+		return (type == AnimatedDocument) && hasMimeType(qstr("video/mp4"));
 	}
 	bool isTheme() const {
-		return name.endsWith(qstr(".tdesktop-theme"), Qt::CaseInsensitive) ||
-		       name.endsWith(qstr(".tdesktop-palette"), Qt::CaseInsensitive);
+		return _filename.endsWith(qstr(".tdesktop-theme"), Qt::CaseInsensitive) ||
+		       _filename.endsWith(qstr(".tdesktop-palette"), Qt::CaseInsensitive);
 	}
 	bool tryPlaySong() const {
-		return (song() != nullptr) || mime.startsWith(qstr("audio/"), Qt::CaseInsensitive);
+		return (song() != nullptr) || _mimeString.startsWith(qstr("audio/"), Qt::CaseInsensitive);
 	}
 	bool isMusic() const {
 		if (auto s = song()) {
@@ -1374,14 +1374,26 @@ public:
 	// to (this) received from the server "same" document.
 	void collectLocalData(DocumentData *local);
 
+	QString filename() const {
+		return _filename;
+	}
+	QString mimeString() const {
+		return _mimeString;
+	}
+	bool hasMimeType(QLatin1String mime) const {
+		return !_mimeString.compare(mime, Qt::CaseInsensitive);
+	}
+	void setMimeString(const QString &mime) {
+		_mimeString = mime;
+	}
+
+
 	~DocumentData();
 
 	DocumentId id = 0;
 	DocumentType type = FileDocument;
 	QSize dimensions;
 	qint32 date = 0;
-	QString name;
-	QString mime;
 	ImagePtr thumb, replyPreview;
 	qint32 size = 0;
 
@@ -1394,12 +1406,12 @@ public:
 		return ::mediaKey(locationType(), _dc, id, _version);
 	}
 
-	static QString composeNameString(const QString &filename, const QString &songTitle, const QString &songPerformer);
+	static QString ComposeNameString(const QString &filename, const QString &songTitle, const QString &songPerformer);
 	QString composeNameString() const {
 		if (auto songData = song()) {
-			return composeNameString(name, songData->title, songData->performer);
+			return ComposeNameString(_filename, songData->title, songData->performer);
 		}
-		return composeNameString(name, QString(), QString());
+		return ComposeNameString(_filename, QString(), QString());
 	}
 
 private:
@@ -1417,6 +1429,9 @@ private:
 	quint64 _access = 0;
 	qint32 _version = 0;
 	QString _url;
+	QString _filename;
+	QString _mimeString;
+
 
 	FileLocation _location;
 	QByteArray _data;

@@ -428,13 +428,12 @@ void MediaView::updateControls() {
 	if (_photo || (_history && _overview != OverviewCount)) {
 		_leftNavVisible =
 		    (_index > 0) ||
-		    (_index == 0 &&
-		     ((!_msgmigrated && _history &&
-		       _history->overview(_overview).size() < _history->overviewCount(_overview)) ||
-		      (_msgmigrated && _migrated &&
-		       _migrated->overview(_overview).size() < _migrated->overviewCount(_overview)) ||
-		      (!_msgmigrated && _history && _migrated &&
-		       (!_migrated->overview(_overview).isEmpty() || _migrated->overviewCount(_overview) > 0)))) ||
+		    (_index == 0 && ((!_msgmigrated && _history &&
+		                      _history->overview(_overview).size() < _history->overviewCount(_overview)) ||
+		                     (_msgmigrated && _migrated &&
+		                      _migrated->overview(_overview).size() < _migrated->overviewCount(_overview)) ||
+		                     (!_msgmigrated && _history && _migrated &&
+		                      (!_migrated->overview(_overview).empty() || _migrated->overviewCount(_overview) > 0)))) ||
 		    (_index < 0 && _photo == _additionalChatPhoto &&
 		     ((_history && _history->overviewCount(_overview) > 0) ||
 		      (_migrated && _history->overviewLoaded(_overview) && _migrated->overviewCount(_overview) > 0)));
@@ -443,7 +442,7 @@ void MediaView::updateControls() {
 		    ((!_msgmigrated && _history && _index + 1 < _history->overview(_overview).size()) ||
 		     (_msgmigrated && _migrated && _index + 1 < _migrated->overview(_overview).size()) ||
 		     (_msgmigrated && _migrated && _history &&
-		      (!_history->overview(_overview).isEmpty() || _history->overviewCount(_overview) > 0)) ||
+		      (!_history->overview(_overview).empty() || _history->overviewCount(_overview) > 0)) ||
 		     (!_msgmigrated && _history && _index + 1 == _history->overview(_overview).size() &&
 		      _additionalChatPhoto) ||
 		     (_msgmigrated && _migrated && _index + 1 == _migrated->overview(_overview).size() &&
@@ -839,7 +838,7 @@ void MediaView::onSaveAs() {
 			QFileInfo alreadyInfo(location.name());
 			QDir alreadyDir(alreadyInfo.dir());
 			QString name = alreadyInfo.fileName(), filter;
-			MimeType mimeType = mimeTypeForName(_doc->mime);
+			MimeType mimeType = mimeTypeForName(_doc->mimeString());
 			QStringList p = mimeType.globPatterns();
 			QString pattern = p.isEmpty() ? QString() : p.front();
 			if (name.isEmpty()) {
@@ -976,7 +975,7 @@ void MediaView::onDownload() {
 		const FileLocation &location(_doc->location(true));
 		if (location.accessEnable()) {
 			if (!QDir().exists(path)) QDir().mkpath(path);
-			toName = filedialogNextFilename(_doc->name, location.name(), path);
+			toName = filedialogNextFilename(_doc->filename(), location.name(), path);
 			if (!toName.isEmpty() && toName != location.name()) {
 				QFile(toName).remove();
 				if (!QFile(location.name()).copy(toName)) {
@@ -1406,7 +1405,7 @@ void MediaView::displayDocument(DocumentData *doc, HistoryItem *item) { // empty
 			               lang(lng_in_dlg_sticker) :
 			               (_doc->type == AnimatedDocument ?
 			                    qsl("GIF") :
-			                    (_doc->name.isEmpty() ? lang(lng_mediaview_doc_image) : _doc->name));
+			                    (_doc->filename().isEmpty() ? lang(lng_mediaview_doc_image) : _doc->filename()));
 		} else {
 			_docName = lang(lng_message_empty);
 		}
@@ -2959,7 +2958,7 @@ void MediaView::loadBack() {
 			} else {
 				App::main()->loadMediaBack(_history->peer, _overview);
 				if (_migrated && _index == 0 &&
-				    (_migrated->overviewCount(_overview) < 0 || _migrated->overview(_overview).isEmpty()) &&
+				    (_migrated->overviewCount(_overview) < 0 || _migrated->overview(_overview).empty()) &&
 				    !_migrated->overviewLoaded(_overview)) {
 					App::main()->loadMediaBack(_migrated->peer, _overview);
 				}
@@ -2994,13 +2993,13 @@ MediaView::LastChatPhoto MediaView::computeLastOverviewChatPhoto() {
 
 	if (!_history) return emptyResult;
 	auto &list = _history->overview(OverviewChatPhotos);
-	if (!list.isEmpty()) {
+	if (!list.empty()) {
 		return lastPhotoInOverview(_history, list);
 	}
 
 	if (!_migrated || !_history->overviewLoaded(OverviewChatPhotos)) return emptyResult;
 	auto &migratedList = _migrated->overview(OverviewChatPhotos);
-	if (!migratedList.isEmpty()) {
+	if (!migratedList.empty()) {
 		return lastPhotoInOverview(_migrated, migratedList);
 	}
 	return emptyResult;
@@ -3058,8 +3057,8 @@ void MediaView::updateHeader() {
 	if (_history) {
 		if (_overview != OverviewCount) {
 			bool lastOverviewPhotoLoaded =
-			    (!_history->overview(_overview).isEmpty() ||
-			     (_migrated && _history->overviewCount(_overview) == 0 && !_migrated->overview(_overview).isEmpty()));
+			    (!_history->overview(_overview).empty() ||
+			     (_migrated && _history->overviewCount(_overview) == 0 && !_migrated->overview(_overview).empty()));
 			count = _history->overviewCount(_overview);
 			if (addcount >= 0 && count >= 0) {
 				count += addcount;
@@ -3088,14 +3087,14 @@ void MediaView::updateHeader() {
 	if (index >= 0 && index < count && count > 1) {
 		if (_doc) {
 			_headerText = lng_mediaview_file_n_of_count(
-			    lt_file, _doc->name.isEmpty() ? lang(lng_mediaview_doc_image) : _doc->name, lt_n,
+			    lt_file, _doc->filename().isEmpty() ? lang(lng_mediaview_doc_image) : _doc->filename(), lt_n,
 			    QString::number(index + 1), lt_count, QString::number(count));
 		} else {
 			_headerText = lng_mediaview_n_of_count(lt_n, QString::number(index + 1), lt_count, QString::number(count));
 		}
 	} else {
 		if (_doc) {
-			_headerText = _doc->name.isEmpty() ? lang(lng_mediaview_doc_image) : _doc->name;
+			_headerText = _doc->filename().isEmpty() ? lang(lng_mediaview_doc_image) : _doc->filename();
 		} else if (_user) {
 			_headerText = lang(lng_mediaview_profile_photo);
 		} else if ((_channel && !_history->isMegagroup()) || (_peer && _peer->isChannel() && !_peer->isMegagroup())) {
