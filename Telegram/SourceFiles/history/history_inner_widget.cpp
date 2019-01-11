@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history_inner_widget.h"
 #include "apiwrap.h"
 #include "auth_session.h"
@@ -668,7 +670,6 @@ void HistoryInner::touchDeaccelerate(qint32 elapsed) {
 }
 
 void HistoryInner::touchEvent(QTouchEvent *e) {
-	const Qt::TouchPointStates &states(e->touchPointStates());
 	if (e->type() == QEvent::TouchCancel) { // cancel
 		if (!_touchInProgress) return;
 		_touchInProgress = false;
@@ -1240,9 +1241,9 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 				_menu->addAction(lang(lng_context_edit_msg), _widget, SLOT(onEditMessage()));
 			}
 			if (item->canPin()) {
-				bool ispinned = (item->history()->peer->asChannel()->mgInfo->pinnedMsgId == item->id);
-				_menu->addAction(lang(ispinned ? lng_context_unpin_msg : lng_context_pin_msg), _widget,
-				                 ispinned ? SLOT(onUnpinMessage()) : SLOT(onPinMessage()));
+				bool isPinned = item->isPinned();
+				_menu->addAction(lang(isPinned ? lng_context_unpin_msg : lng_context_pin_msg), _widget,
+				                 isPinned ? SLOT(onUnpinMessage()) : SLOT(onPinMessage()));
 			}
 		}
 		if (lnkPhoto) {
@@ -1332,7 +1333,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 					_menu->addAction(lang(lng_context_edit_msg), _widget, SLOT(onEditMessage()));
 				}
 				if (item->canPin()) {
-					bool ispinned = (item->history()->peer->asChannel()->mgInfo->pinnedMsgId == item->id);
+					bool ispinned = (item->history()->peer->asChannel()->pinnedMessageId() == item->id);
 					_menu->addAction(lang(ispinned ? lng_context_unpin_msg : lng_context_pin_msg), _widget,
 					                 ispinned ? SLOT(onUnpinMessage()) : SLOT(onPinMessage()));
 				}
@@ -1346,7 +1347,7 @@ void HistoryInner::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 					_menu->addAction(lang(lng_context_edit_msg), _widget, SLOT(onEditMessage()));
 				}
 				if (item->canPin()) {
-					bool ispinned = (item->history()->peer->asChannel()->mgInfo->pinnedMsgId == item->id);
+					bool ispinned = (item->history()->peer->asChannel()->pinnedMessageId() == item->id);
 					_menu->addAction(lang(ispinned ? lng_context_unpin_msg : lng_context_pin_msg), _widget,
 					                 ispinned ? SLOT(onUnpinMessage()) : SLOT(onPinMessage()));
 				}
@@ -1488,7 +1489,7 @@ void HistoryInner::savePhotoToFile(PhotoData *photo) {
 
 	auto filter = qsl("JPEG Image (*.jpg);;") + FileDialog::AllFilesFilter();
 	FileDialog::GetWritePath(lang(lng_save_photo), filter, filedialogDefaultName(qsl("photo"), qsl(".jpg")),
-	                         base::lambda_guarded(this, [this, photo](const QString &result) {
+	                         base::lambda_guarded(this, [photo](const QString &result) {
 		                         if (!result.isEmpty()) {
 			                         photo->full->pix().toImage().save(result, "JPG");
 		                         }

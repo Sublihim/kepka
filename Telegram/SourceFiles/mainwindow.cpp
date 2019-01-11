@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "mainwindow.h"
 
 #include "apiwrap.h"
@@ -313,9 +315,10 @@ void MainWindow::sendServiceHistoryRequest() {
 		                MTPstring(), MTP_string("42777"), MTP_userProfilePhotoEmpty(), MTP_userStatusRecently(),
 		                MTPint(), MTPstring(), MTPstring(), MTPstring())));
 	}
-	_serviceHistoryRequest = MTP::send(
-	    MTPmessages_GetHistory(user->input, MTP_int(0), MTP_int(0), MTP_int(0), MTP_int(1), MTP_int(0), MTP_int(0)),
-	    _main->rpcDone(&MainWidget::serviceHistoryDone), _main->rpcFail(&MainWidget::serviceHistoryFail));
+	_serviceHistoryRequest =
+	    MTP::send(MTPmessages_GetHistory(user->input, MTP_int(0), MTP_int(0), MTP_int(0), MTP_int(1), MTP_int(0),
+	                                     MTP_int(0), MTP_int(0)),
+	              _main->rpcDone(&MainWidget::serviceHistoryDone), _main->rpcFail(&MainWidget::serviceHistoryFail));
 }
 
 void MainWindow::setupMain(const MTPUser *self) {
@@ -1608,11 +1611,9 @@ void LastCrashedWindow::updateControls() {
 	h += _networkSettings.height() + padding;
 
 	QRect scr(QApplication::primaryScreen()->availableGeometry());
-	QSize s(2 * padding +
-	            QFontMetrics(_label.font())
-	                .width(qsl("Last time %1 was not closed properly.").arg(str_const_toString(AppName))) +
-	            padding + _networkSettings.width(),
-	        h);
+	auto label_width = QFontMetrics(_label.font())
+	                       .width(qsl("Last time %1 was not closed properly.").arg(str_const_toString(AppName)));
+	QSize s(2 * padding + label_width + padding + _networkSettings.width(), h);
 	if (s == size()) {
 		resizeEvent(0);
 	} else {

@@ -1,26 +1,27 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
-#include "base/lambda.h"
 #include "styles/style_widgets.h"
 #include "ui/animation.h"
 
@@ -32,7 +33,7 @@ namespace Ui {
 
 class RoundCheckbox {
 public:
-	RoundCheckbox(const style::RoundCheckbox &st, base::lambda<void()> updateCallback);
+	RoundCheckbox(const style::RoundCheckbox &st, Fn<void()> updateCallback);
 
 	void paint(Painter &p, TimeMs ms, int x, int y, int outerWidth, double masterScale = 1.);
 
@@ -60,7 +61,7 @@ private:
 	QRect cacheDestRect(int x, int y, double scale) const;
 
 	const style::RoundCheckbox &_st;
-	base::lambda<void()> _updateCallback;
+	Fn<void()> _updateCallback;
 
 	bool _checked = false;
 	std::vector<Icon> _icons;
@@ -74,8 +75,8 @@ private:
 
 class RoundImageCheckbox {
 public:
-	using PaintRoundImage = base::lambda<void(Painter &p, int x, int y, int outerWidth, int size)>;
-	RoundImageCheckbox(const style::RoundImageCheckbox &st, base::lambda<void()> updateCallback,
+	using PaintRoundImage = Fn<void(Painter &p, int x, int y, int outerWidth, int size)>;
+	RoundImageCheckbox(const style::RoundImageCheckbox &st, Fn<void()> updateCallback,
 	                   PaintRoundImage &&paintRoundImage);
 
 	void paint(Painter &p, TimeMs ms, int x, int y, int outerWidth);
@@ -95,7 +96,7 @@ private:
 	void prepareWideCache();
 
 	const style::RoundImageCheckbox &_st;
-	base::lambda<void()> _updateCallback;
+	Fn<void()> _updateCallback;
 	PaintRoundImage _paintRoundImage;
 
 	QPixmap _wideCache;

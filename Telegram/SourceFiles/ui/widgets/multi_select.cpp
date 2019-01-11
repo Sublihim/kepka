@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "ui/widgets/multi_select.h"
 
 #include "app.h"
@@ -248,7 +250,7 @@ void MultiSelect::Item::setOver(bool over) {
 	}
 }
 
-MultiSelect::MultiSelect(QWidget *parent, const style::MultiSelect &st, base::lambda<QString()> placeholderFactory)
+MultiSelect::MultiSelect(QWidget *parent, const style::MultiSelect &st, Fn<QString()> placeholderFactory)
     : TWidget(parent)
     , _st(st)
     , _scroll(this, _st.scroll) {
@@ -299,15 +301,15 @@ void MultiSelect::scrollTo(int activeTop, int activeBottom) {
 	}
 }
 
-void MultiSelect::setQueryChangedCallback(base::lambda<void(const QString &query)> callback) {
+void MultiSelect::setQueryChangedCallback(Fn<void(const QString &query)> callback) {
 	_queryChangedCallback = std::move(callback);
 }
 
-void MultiSelect::setSubmittedCallback(base::lambda<void(bool ctrlShiftEnter)> callback) {
+void MultiSelect::setSubmittedCallback(Fn<void(bool ctrlShiftEnter)> callback) {
 	_inner->setSubmittedCallback(std::move(callback));
 }
 
-void MultiSelect::setResizedCallback(base::lambda<void()> callback) {
+void MultiSelect::setResizedCallback(Fn<void()> callback) {
 	_resizedCallback = std::move(callback);
 }
 
@@ -340,7 +342,7 @@ void MultiSelect::finishItemsBunch() {
 	_inner->finishItemsBunch(AddItemWay::SkipAnimation);
 }
 
-void MultiSelect::setItemRemovedCallback(base::lambda<void(quint64 itemId)> callback) {
+void MultiSelect::setItemRemovedCallback(Fn<void(quint64 itemId)> callback) {
 	_inner->setItemRemovedCallback(std::move(callback));
 }
 
@@ -369,7 +371,7 @@ int MultiSelect::resizeGetHeight(int newWidth) {
 	return newHeight;
 }
 
-MultiSelect::Inner::Inner(QWidget *parent, const style::MultiSelect &st, base::lambda<QString()> placeholder,
+MultiSelect::Inner::Inner(QWidget *parent, const style::MultiSelect &st, Fn<QString()> placeholder,
                           ScrollCallback callback)
     : TWidget(parent)
     , _st(st)
@@ -418,11 +420,11 @@ void MultiSelect::Inner::clearQuery() {
 	_field->setText(QString());
 }
 
-void MultiSelect::Inner::setQueryChangedCallback(base::lambda<void(const QString &query)> callback) {
+void MultiSelect::Inner::setQueryChangedCallback(Fn<void(const QString &query)> callback) {
 	_queryChangedCallback = std::move(callback);
 }
 
-void MultiSelect::Inner::setSubmittedCallback(base::lambda<void(bool ctrlShiftEnter)> callback) {
+void MultiSelect::Inner::setSubmittedCallback(Fn<void(bool ctrlShiftEnter)> callback) {
 	_submittedCallback = std::move(callback);
 }
 
@@ -725,11 +727,11 @@ void MultiSelect::Inner::setItemText(quint64 itemId, const QString &text) {
 	}
 }
 
-void MultiSelect::Inner::setItemRemovedCallback(base::lambda<void(quint64 itemId)> callback) {
+void MultiSelect::Inner::setItemRemovedCallback(Fn<void(quint64 itemId)> callback) {
 	_itemRemovedCallback = std::move(callback);
 }
 
-void MultiSelect::Inner::setResizedCallback(base::lambda<void(int heightDelta)> callback) {
+void MultiSelect::Inner::setResizedCallback(Fn<void(int heightDelta)> callback) {
 	_resizedCallback = std::move(callback);
 }
 
@@ -743,7 +745,7 @@ void MultiSelect::Inner::removeItem(quint64 itemId) {
 
 			item->hideAnimated();
 			_idsMap.erase(item->id());
-			auto inserted = _removingItems.insert(std::move(item));
+			_removingItems.insert(std::move(item));
 			_items.erase(_items.begin() + i);
 
 			if (_active == i) {

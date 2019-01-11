@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "overview/overview_layout.h"
 
 #include "application.h"
@@ -177,7 +179,7 @@ public:
 private:
 	void startAnimation();
 
-	base::lambda<void()> _updateCallback;
+	Fn<void()> _updateCallback;
 	Ui::RoundCheckbox _check;
 
 	Animation _pression;
@@ -488,7 +490,6 @@ void Video::getState(ClickHandlerPtr &link, HistoryCursorState &cursor, QPoint p
 }
 
 void Video::updateStatusText() {
-	bool showPause = false;
 	int statusSize = 0;
 	if (_data->status == FileDownloadFailed || _data->status == FileUploadFailed) {
 		statusSize = FileStatusSizeFailed;
@@ -556,7 +557,7 @@ void Voice::paint(Painter &p, const QRect &clip, TextSelection selection, const 
 	}
 	bool radial = isRadialAnimation(context->ms);
 
-	qint32 nameleft = 0, nametop = 0, nameright = 0, statustop = 0, datetop = -1;
+	qint32 nameleft = 0, nametop = 0, nameright = 0, statustop = 0;
 
 	nameleft = _st.songPadding.left() + _st.songThumbSize + _st.songPadding.right();
 	nameright = _st.songPadding.left();
@@ -640,7 +641,7 @@ void Voice::paint(Painter &p, const QRect &clip, TextSelection selection, const 
 void Voice::getState(ClickHandlerPtr &link, HistoryCursorState &cursor, QPoint point) const {
 	bool loaded = _data->loaded();
 
-	qint32 nameleft = 0, nametop = 0, nameright = 0, statustop = 0, datetop = 0;
+	qint32 nameleft = 0, nametop = 0, nameright = 0, statustop = 0;
 
 	nameleft = _st.songPadding.left() + _st.songThumbSize + _st.songPadding.right();
 	nameright = _st.songPadding.left();
@@ -933,8 +934,6 @@ void Document::getState(ClickHandlerPtr &link, HistoryCursorState &cursor, QPoin
 	bool loaded = _data->loaded() || Local::willStickerImageLoad(_data->mediaKey());
 
 	qint32 nameleft = 0, nametop = 0, nameright = 0, statustop = 0, datetop = 0;
-	bool wthumb = withThumb();
-
 	if (_data->song()) {
 		nameleft = _st.songPadding.left() + _st.songThumbSize + _st.songPadding.right();
 		nameright = _st.songPadding.left();

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "profile/profile_channel_controllers.h"
 
 #include "apiwrap.h"
@@ -241,7 +243,8 @@ void ParticipantsBoxController::loadMoreRows() {
 	// First query is small and fast, next loads a lot of rows.
 	auto perPage = (_offset > 0) ? kParticipantsPerPage : kParticipantsFirstPageCount;
 	_loadRequestId =
-	    request(MTPchannels_GetParticipants(_channel->inputChannel, filter(), MTP_int(_offset), MTP_int(perPage)))
+	    request(MTPchannels_GetParticipants(_channel->inputChannel, filter(), MTP_int(_offset), MTP_int(perPage),
+	                                        MTP_int(0)))
 	        .done([this](const MTPchannels_ChannelParticipants &result) {
 		        Expects(result.type() == mtpc_channels_channelParticipants);
 
@@ -649,19 +652,19 @@ bool ParticipantsBoxSearchController::loadMoreRows() {
 		// (because we've waited for search request by timer already,
 		// so we don't expect it to be fast, but we want to fill cache).
 		auto perPage = kParticipantsPerPage;
-		_requestId =
-		    request(MTPchannels_GetParticipants(_channel->inputChannel, filter(), MTP_int(_offset), MTP_int(perPage)))
-		        .done([this, perPage](const MTPchannels_ChannelParticipants &result, mtpRequestId requestId) {
-			        searchDone(requestId, result, perPage);
-		        })
-		        .fail([this](const RPCError &error, mtpRequestId requestId) {
-			        if (_requestId == requestId) {
-				        _requestId = 0;
-				        _allLoaded = true;
-				        delegate()->peerListSearchRefreshRows();
-			        }
-		        })
-		        .send();
+		_requestId = request(MTPchannels_GetParticipants(_channel->inputChannel, filter(), MTP_int(_offset),
+		                                                 MTP_int(perPage), MTP_int(0)))
+		                 .done([this, perPage](const MTPchannels_ChannelParticipants &result, mtpRequestId requestId) {
+			                 searchDone(requestId, result, perPage);
+		                 })
+		                 .fail([this](const RPCError &error, mtpRequestId requestId) {
+			                 if (_requestId == requestId) {
+				                 _requestId = 0;
+				                 _allLoaded = true;
+				                 delegate()->peerListSearchRefreshRows();
+			                 }
+		                 })
+		                 .send();
 
 		auto entry = Query();
 		entry.text = _query;
@@ -763,7 +766,7 @@ void AddParticipantBoxController::loadMoreRows() {
 	// First query is small and fast, next loads a lot of rows.
 	auto perPage = (_offset > 0) ? kParticipantsPerPage : kParticipantsFirstPageCount;
 	_loadRequestId = request(MTPchannels_GetParticipants(_channel->inputChannel, MTP_channelParticipantsRecent(),
-	                                                     MTP_int(_offset), MTP_int(perPage)))
+	                                                     MTP_int(_offset), MTP_int(perPage), MTP_int(0)))
 	                     .done([this](const MTPchannels_ChannelParticipants &result) {
 		                     Expects(result.type() == mtpc_channels_channelParticipants);
 
@@ -1278,7 +1281,7 @@ void AddParticipantBoxSearchController::requestParticipants() {
 	auto perPage = kParticipantsPerPage;
 	_requestId =
 	    request(MTPchannels_GetParticipants(_channel->inputChannel, MTP_channelParticipantsSearch(MTP_string(_query)),
-	                                        MTP_int(_offset), MTP_int(perPage)))
+	                                        MTP_int(_offset), MTP_int(perPage), MTP_int(0)))
 	        .done([this, perPage](const MTPchannels_ChannelParticipants &result, mtpRequestId requestId) {
 		        searchParticipantsDone(requestId, result, perPage);
 	        })

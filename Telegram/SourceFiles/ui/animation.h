@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #define _USE_MATH_DEFINES // for M_PI in MSVC (GCC and Clang has it as extension)
@@ -30,7 +32,6 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include <cmath>
 #include <cstdint>
 
-#include "base/lambda.h"
 #include "core/basic_types.h"
 #include "core/utils.h"
 #include "mtproto/facade.h"
@@ -103,7 +104,7 @@ enum Notification {
 
 namespace anim {
 
-using transition = base::lambda<double(double delta, double dt)>;
+using transition = Fn<double(double delta, double dt)>;
 
 extern transition linear;
 extern transition sineInOut;
@@ -687,7 +688,7 @@ private:
 
 		anim::value value;
 		BasicAnimation a_animation;
-		base::lambda<void()> updateCallback;
+		Fn<void()> updateCallback;
 		double duration = 0.;
 		anim::transition transition = anim::linear;
 		MTP::PauseHolder pause;

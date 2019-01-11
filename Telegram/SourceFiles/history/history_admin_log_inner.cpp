@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history_admin_log_inner.h"
 #include "apiwrap.h"
 #include "auth_session.h"
@@ -339,8 +341,9 @@ void InnerWidget::applySearch(const QString &query) {
 }
 
 void InnerWidget::requestAdmins() {
+	auto participantsHash = 0;
 	request(MTPchannels_GetParticipants(_channel->inputChannel, MTP_channelParticipantsAdmins(), MTP_int(0),
-	                                    MTP_int(kMaxChannelAdmins)))
+	                                    MTP_int(kMaxChannelAdmins), MTP_int(participantsHash)))
 	    .done([this](const MTPchannels_ChannelParticipants &result) {
 		    Expects(result.type() == mtpc_channels_channelParticipants);
 		    auto &participants = result.c_channels_channelParticipants();
@@ -375,7 +378,7 @@ void InnerWidget::requestAdmins() {
 	    .send();
 }
 
-void InnerWidget::showFilter(base::lambda<void(FilterValue &&filter)> callback) {
+void InnerWidget::showFilter(Fn<void(FilterValue &&filter)> callback) {
 	if (_admins.empty()) {
 		_showFilterCallback = std::move(callback);
 	} else {
@@ -723,7 +726,6 @@ void InnerWidget::clearAfterFilterChange() {
 }
 
 void InnerWidget::paintEmpty(Painter &p) {
-	style::font font(st::msgServiceFont);
 	auto rectWidth = st::historyAdminLogEmptyWidth;
 	auto innerWidth = rectWidth - st::historyAdminLogEmptyPadding.left() - st::historyAdminLogEmptyPadding.right();
 	auto rectHeight = st::historyAdminLogEmptyPadding.top() + _emptyText.countHeight(innerWidth) +
@@ -876,8 +878,6 @@ void InnerWidget::showContextMenu(QContextMenuEvent *e, bool showFromTouch) {
 			suggestRestrictUser(user);
 		}
 	} else { // maybe cursor on some text history item?
-		bool canDelete = item && item->canDelete() && (item->id > 0 || !item->serviceMsg());
-		bool canForward = item && item->canForward();
 
 		auto msg = dynamic_cast<HistoryMessage *>(item);
 		if (isUponSelected > 0) {
@@ -965,7 +965,7 @@ void InnerWidget::savePhotoToFile(PhotoData *photo) {
 
 	auto filter = qsl("JPEG Image (*.jpg);;") + FileDialog::AllFilesFilter();
 	FileDialog::GetWritePath(lang(lng_save_photo), filter, filedialogDefaultName(qsl("photo"), qsl(".jpg")),
-	                         base::lambda_guarded(this, [this, photo](const QString &result) {
+	                         base::lambda_guarded(this, [photo](const QString &result) {
 		                         if (!result.isEmpty()) {
 			                         photo->full->pix().toImage().save(result, "JPG");
 		                         }
@@ -1089,7 +1089,7 @@ void InnerWidget::suggestRestrictUser(not_null<UserData *> user) {
 			editRestrictions(true, MTP_channelBannedRights(MTP_flags(0), MTP_int(0)));
 		} else {
 			request(MTPchannels_GetParticipant(_channel->inputChannel, user->inputUser))
-			    .done([this, editRestrictions](const MTPchannels_ChannelParticipant &result) {
+			    .done([editRestrictions](const MTPchannels_ChannelParticipant &result) {
 				    Expects(result.type() == mtpc_channels_channelParticipant);
 				    auto &participant = result.c_channels_channelParticipant();
 				    App::feedUsers(participant.vusers);
@@ -1102,7 +1102,7 @@ void InnerWidget::suggestRestrictUser(not_null<UserData *> user) {
 					    editRestrictions(hasAdminRights, MTP_channelBannedRights(MTP_flags(0), MTP_int(0)));
 				    }
 			    })
-			    .fail([this, editRestrictions](const RPCError &error) {
+			    .fail([editRestrictions](const RPCError &error) {
 				    editRestrictions(false, MTP_channelBannedRights(MTP_flags(0), MTP_int(0)));
 			    })
 			    .send();
@@ -1430,12 +1430,12 @@ void InnerWidget::updateSelected() {
 			}
 		}
 	}
-
-	// if (_mouseAction == MouseAction::Selecting) {
-	//	_widget->checkSelectingScroll(mousePos);
-	//} else {
-	//	_widget->noSelectingScroll();
-	//} // TODO
+	/*
+	    if (_mouseAction == MouseAction::Selecting) {
+	        _widget->checkSelectingScroll(mousePos);
+	    } else {
+	        _widget->noSelectingScroll();
+	    } */ // TODO
 
 	if (_mouseAction == MouseAction::None && (lnkChanged || cursor != _cursor)) {
 		setCursor(_cursor = cursor);
@@ -1444,93 +1444,92 @@ void InnerWidget::updateSelected() {
 
 void InnerWidget::performDrag() {
 	if (_mouseAction != MouseAction::Dragging) return;
+	/*
+	    auto uponSelected = false;
+	    if (_mouseActionItem) {
+	        if (!_selected.isEmpty() && _selected.cbegin().value() == FullSelection) {
+	            uponSelected = _selected.contains(_mouseActionItem);
+	        } else {
+	            HistoryStateRequest request;
+	            request.flags |= Text::StateRequest::Flag::LookupSymbol;
+	            auto dragState = _mouseActionItem->getState(_dragStartPosition.x(), _dragStartPosition.y(), request);
+	            uponSelected = (dragState.cursor == HistoryInTextCursorState);
+	            if (uponSelected) {
+	                if (_selected.isEmpty() || _selected.cbegin().value() == FullSelection ||
+	                    _selected.cbegin().key() != _mouseActionItem) {
+	                    uponSelected = false;
+	                } else {
+	                    quint16 selFrom = _selected.cbegin().value().from, selTo = _selected.cbegin().value().to;
+	                    if (dragState.symbol < selFrom || dragState.symbol >= selTo) {
+	                        uponSelected = false;
+	                    }
+	                }
+	            }
+	        }
+	    }
+	    auto pressedHandler = ClickHandler::getPressed();
 
-	auto uponSelected = false;
-	// if (_mouseActionItem) {
-	//	if (!_selected.isEmpty() && _selected.cbegin().value() == FullSelection) {
-	//		uponSelected = _selected.contains(_mouseActionItem);
-	//	} else {
-	//		HistoryStateRequest request;
-	//		request.flags |= Text::StateRequest::Flag::LookupSymbol;
-	//		auto dragState = _mouseActionItem->getState(_dragStartPosition.x(), _dragStartPosition.y(), request);
-	//		uponSelected = (dragState.cursor == HistoryInTextCursorState);
-	//		if (uponSelected) {
-	//			if (_selected.isEmpty() ||
-	//				_selected.cbegin().value() == FullSelection ||
-	//				_selected.cbegin().key() != _mouseActionItem
-	//				) {
-	//				uponSelected = false;
-	//			} else {
-	//				quint16 selFrom = _selected.cbegin().value().from, selTo = _selected.cbegin().value().to;
-	//				if (dragState.symbol < selFrom || dragState.symbol >= selTo) {
-	//					uponSelected = false;
-	//				}
-	//			}
-	//		}
-	//	}
-	//}
-	// auto pressedHandler = ClickHandler::getPressed();
+	    if (dynamic_cast<VoiceSeekClickHandler *>(pressedHandler.data())) {
+	        return;
+	    }
 
-	// if (dynamic_cast<VoiceSeekClickHandler*>(pressedHandler.data())) {
-	//	return;
-	//}
+	    TextWithEntities sel;
+	    QList<QUrl> urls;
+	    if (uponSelected) {
+	        sel = getSelectedText();
+	    } else if (pressedHandler) {
+	        sel = {pressedHandler->dragText(), EntitiesInText()};
+	        // if (!sel.isEmpty() && sel.at(0) != '/' && sel.at(0) != '@' && sel.at(0) != '#') {
+	        //	urls.push_back(QUrl::fromEncoded(sel.toUtf8())); // Google Chrome crashes in Mac OS X O_o
+	        //}
+	    }
+	    if (auto mimeData = mimeDataFromTextWithEntities(sel)) {
+	        updateDragSelection(0, 0, false);
+	        _widget->noSelectingScroll();
 
-	// TextWithEntities sel;
-	// QList<QUrl> urls;
-	// if (uponSelected) {
-	//	sel = getSelectedText();
-	//} else if (pressedHandler) {
-	//	sel = { pressedHandler->dragText(), EntitiesInText() };
-	//	//if (!sel.isEmpty() && sel.at(0) != '/' && sel.at(0) != '@' && sel.at(0) != '#') {
-	//	//	urls.push_back(QUrl::fromEncoded(sel.toUtf8())); // Google Chrome crashes in Mac OS X O_o
-	//	//}
-	//}
-	// if (auto mimeData = mimeDataFromTextWithEntities(sel)) {
-	//	updateDragSelection(0, 0, false);
-	//	_widget->noSelectingScroll();
+	        if (!urls.isEmpty()) mimeData->setUrls(urls);
+	        if (uponSelected && !Adaptive::OneColumn()) {
+	            auto selectedState = getSelectionState();
+	            if (selectedState.count > 0 && selectedState.count == selectedState.canForwardCount) {
+	                mimeData->setData(qsl("application/x-td-forward-selected"), "1");
+	            }
+	        }
+	        _controller->window()->launchDrag(std::move(mimeData));
+	        return;
+	    } else {
+	        auto forwardMimeType = QString();
+	        auto pressedMedia = static_cast<HistoryMedia *>(nullptr);
+	        if (auto pressedItem = App::pressedItem()) {
+	            pressedMedia = pressedItem->getMedia();
+	            if (_mouseCursorState == HistoryInDateCursorState || (pressedMedia && pressedMedia->dragItem())) {
+	                forwardMimeType = qsl("application/x-td-forward-pressed");
+	            }
+	        }
+	        if (auto pressedLnkItem = App::pressedLinkItem()) {
+	            if ((pressedMedia = pressedLnkItem->getMedia())) {
+	                if (forwardMimeType.isEmpty() && pressedMedia->dragItemByHandler(pressedHandler)) {
+	                    forwardMimeType = qsl("application/x-td-forward-pressed-link");
+	                }
+	            }
+	        }
+	        if (!forwardMimeType.isEmpty()) {
+	            auto mimeData = std::make_unique<QMimeData>();
+	            mimeData->setData(forwardMimeType, "1");
+	            if (auto document = (pressedMedia ? pressedMedia->getDocument() : nullptr)) {
+	                auto filepath = document->filepath(DocumentData::FilePathResolveChecked);
+	                if (!filepath.isEmpty()) {
+	                    QList<QUrl> urls;
+	                    urls.push_back(QUrl::fromLocalFile(filepath));
+	                    mimeData->setUrls(urls);
+	                }
+	            }
 
-	//	if (!urls.isEmpty()) mimeData->setUrls(urls);
-	//	if (uponSelected && !Adaptive::OneColumn()) {
-	//		auto selectedState = getSelectionState();
-	//		if (selectedState.count > 0 && selectedState.count == selectedState.canForwardCount) {
-	//			mimeData->setData(qsl("application/x-td-forward-selected"), "1");
-	//		}
-	//	}
-	//	_controller->window()->launchDrag(std::move(mimeData));
-	//	return;
-	//} else {
-	//	auto forwardMimeType = QString();
-	//	auto pressedMedia = static_cast<HistoryMedia*>(nullptr);
-	//	if (auto pressedItem = App::pressedItem()) {
-	//		pressedMedia = pressedItem->getMedia();
-	//		if (_mouseCursorState == HistoryInDateCursorState || (pressedMedia && pressedMedia->dragItem())) {
-	//			forwardMimeType = qsl("application/x-td-forward-pressed");
-	//		}
-	//	}
-	//	if (auto pressedLnkItem = App::pressedLinkItem()) {
-	//		if ((pressedMedia = pressedLnkItem->getMedia())) {
-	//			if (forwardMimeType.isEmpty() && pressedMedia->dragItemByHandler(pressedHandler)) {
-	//				forwardMimeType = qsl("application/x-td-forward-pressed-link");
-	//			}
-	//		}
-	//	}
-	//	if (!forwardMimeType.isEmpty()) {
-	//		auto mimeData = std::make_unique<QMimeData>();
-	//		mimeData->setData(forwardMimeType, "1");
-	//		if (auto document = (pressedMedia ? pressedMedia->getDocument() : nullptr)) {
-	//			auto filepath = document->filepath(DocumentData::FilePathResolveChecked);
-	//			if (!filepath.isEmpty()) {
-	//				QList<QUrl> urls;
-	//				urls.push_back(QUrl::fromLocalFile(filepath));
-	//				mimeData->setUrls(urls);
-	//			}
-	//		}
-
-	//		// This call enters event loop and can destroy any QObject.
-	//		_controller->window()->launchDrag(std::move(mimeData));
-	//		return;
-	//	}
-	//} // TODO
+	            // This call enters event loop and can destroy any QObject.
+	            _controller->window()->launchDrag(std::move(mimeData));
+	            return;
+	        }
+	    }*/
+	// TODO
 }
 
 int InnerWidget::itemTop(not_null<const HistoryItem *> item) const {

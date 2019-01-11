@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "profile/profile_block_group_members.h"
 
 #include "apiwrap.h"
@@ -48,8 +50,8 @@ GroupMembersWidget::GroupMembersWidget(QWidget *parent, PeerData *peer, TitleVis
 	          Notify::PeerUpdatedHandler(observeEvents,
 	                                     [this](const Notify::PeerUpdate &update) { notifyPeerUpdated(update); }));
 
-	setRemovedCallback([this, peer](PeerData *selectedPeer) { removePeer(selectedPeer); });
-	setSelectedCallback([this](PeerData *selectedPeer) { Ui::showPeerProfile(selectedPeer); });
+	setRemovedCallback([this](PeerData *selectedPeer) { removePeer(selectedPeer); });
+	setSelectedCallback([](PeerData *selectedPeer) { Ui::showPeerProfile(selectedPeer); });
 	setUpdateItemCallback([this](Item *item) { updateItemStatusText(item); });
 	setPreloadMoreCallback([this] { preloadMore(); });
 
@@ -203,22 +205,9 @@ Ui::PopupMenu *GroupMembersWidget::fillPeerMenu(PeerData *selectedPeer) {
 	auto user = selectedPeer->asUser();
 	auto result = new Ui::PopupMenu(nullptr);
 	result->addAction(lang(lng_context_view_profile), [selectedPeer] { Ui::showPeerProfile(selectedPeer); });
-	auto chat = peer()->asChat();
 	auto channel = peer()->asMegagroup();
 	for_const (auto item, items()) {
 		if (item->peer == selectedPeer) {
-			auto canRemoveAdmin = [item, chat, channel] {
-				if ((item->adminState == Item::AdminState::Admin) && !item->peer->isSelf()) {
-					if (chat) {
-						// Adding of admins from context menu of chat participants
-						// is not supported, so the removing is also disabled.
-						return false; // chat->amCreator();
-					} else if (channel) {
-						return channel->amCreator();
-					}
-				}
-				return false;
-			};
 			if (channel) {
 				if (channel->canEditAdmin(user)) {
 					auto label = lang((item->adminState != Item::AdminState::None) ? lng_context_edit_permissions :

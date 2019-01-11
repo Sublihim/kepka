@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "base/lambda_guard.h"
@@ -40,34 +42,55 @@ class ItemBase;
 namespace App {
 namespace internal {
 
-void CallDelayed(int duration, base::lambda_once<void()> &&lambda);
+void CallDelayed(int duration, FnMut<void()> &&lambda);
 
 } // namespace internal
 
-template <int N, typename Lambda>
-inline void CallDelayed(int duration, base::lambda_internal::guard<N, Lambda> &&guarded) {
-	return internal::CallDelayed(duration, [guarded = std::move(guarded)] { guarded(); });
+template <typename Lambda>
+inline void CallDelayed(int duration, base::lambda_internal::guard_with_QObject<Lambda> &&guarded) {
+	return internal::CallDelayed(duration, std::move(guarded));
 }
 
-template <typename Pointer, typename... PointersAndLambda>
-inline void CallDelayed(int duration, Pointer &&qobject, PointersAndLambda &&... qobjectsAndLambda) {
-	auto guarded =
-	    base::lambda_guarded(std::forward<Pointer>(qobject), std::forward<PointersAndLambda>(qobjectsAndLambda)...);
-	return CallDelayed(duration, std::move(guarded));
+template <typename Lambda>
+inline void CallDelayed(int duration, base::lambda_internal::guard_with_weak<Lambda> &&guarded) {
+	return internal::CallDelayed(duration, std::move(guarded));
 }
 
-template <typename... PointersAndLambda>
-inline base::lambda<void()> LambdaDelayed(int duration, PointersAndLambda &&... qobjectsAndLambda) {
-	auto guarded = base::lambda_guarded(std::forward<PointersAndLambda>(qobjectsAndLambda)...);
-	return [guarded = std::move(guarded), duration] { internal::CallDelayed(duration, [guarded] { guarded(); }); };
+template <typename Lambda> inline void CallDelayed(int duration, const QObject *object, Lambda &&lambda) {
+	return internal::CallDelayed(duration, base::lambda_guarded(object, std::forward<Lambda>(lambda)));
 }
 
-template <typename... PointersAndLambda>
-inline base::lambda_once<void()> LambdaDelayedOnce(int duration, PointersAndLambda &&... qobjectsAndLambda) {
-	auto guarded = base::lambda_guarded(std::forward<PointersAndLambda>(qobjectsAndLambda)...);
-	return [guarded = std::move(guarded), duration]() mutable {
-		internal::CallDelayed(duration, [guarded = std::move(guarded)] { guarded(); });
+template <typename Lambda>
+inline void CallDelayed(int duration, const base::enable_weak_from_this *object, Lambda &&lambda) {
+	return internal::CallDelayed(duration, base::lambda_guarded(object, std::forward<Lambda>(lambda)));
+}
+
+template <typename Lambda> inline auto LambdaDelayed(int duration, const QObject *object, Lambda &&lambda) {
+	auto guarded = base::lambda_guarded(object, std::forward<Lambda>(lambda));
+	return [saved = std::move(guarded), duration] {
+		auto copy = saved;
+		internal::CallDelayed(duration, std::move(copy));
 	};
+}
+
+template <typename Lambda>
+inline auto LambdaDelayed(int duration, const base::enable_weak_from_this *object, Lambda &&lambda) {
+	auto guarded = base::lambda_guarded(object, std::forward<Lambda>(lambda));
+	return [saved = std::move(guarded), duration] {
+		auto copy = saved;
+		internal::CallDelayed(duration, std::move(copy));
+	};
+}
+
+template <typename Lambda> inline auto LambdaDelayedOnce(int duration, const QObject *object, Lambda &&lambda) {
+	auto guarded = base::lambda_guarded(object, std::forward<Lambda>(lambda));
+	return [saved = std::move(guarded), duration]() mutable { internal::CallDelayed(duration, std::move(saved)); };
+}
+
+template <typename Lambda>
+inline auto LambdaDelayedOnce(int duration, const base::enable_weak_from_this *object, Lambda &&lambda) {
+	auto guarded = base::lambda_guarded(object, std::forward<Lambda>(lambda));
+	return [saved = std::move(guarded), duration]() mutable { internal::CallDelayed(duration, std::move(saved)); };
 }
 
 void sendBotCommand(PeerData *peer, UserData *bot, const QString &cmd, MsgId replyTo = 0);

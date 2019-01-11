@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history_widget.h"
 #include "apiwrap.h"
 #include "application.h"
@@ -2605,7 +2607,7 @@ void HistoryWidget::firstLoadMessages() {
 
 	_firstLoadRequest =
 	    MTP::send(MTPmessages_GetHistory(from->input, MTP_int(offset_id), MTP_int(0), MTP_int(offset),
-	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0)),
+	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0), MTP_int(0)),
 	              rpcDone(&HistoryWidget::messagesReceived, from), rpcFail(&HistoryWidget::messagesFailed));
 }
 
@@ -2629,7 +2631,7 @@ void HistoryWidget::loadMessages() {
 
 	_preloadRequest =
 	    MTP::send(MTPmessages_GetHistory(from->peer->input, MTP_int(offset_id), MTP_int(0), MTP_int(offset),
-	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0)),
+	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0), MTP_int(0)),
 	              rpcDone(&HistoryWidget::messagesReceived, from->peer), rpcFail(&HistoryWidget::messagesFailed));
 }
 
@@ -2658,7 +2660,7 @@ void HistoryWidget::loadMessagesDown() {
 
 	_preloadDownRequest =
 	    MTP::send(MTPmessages_GetHistory(from->peer->input, MTP_int(offset_id + 1), MTP_int(0), MTP_int(offset),
-	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0)),
+	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0), MTP_int(0)),
 	              rpcDone(&HistoryWidget::messagesReceived, from->peer), rpcFail(&HistoryWidget::messagesFailed));
 }
 
@@ -2698,7 +2700,7 @@ void HistoryWidget::delayedShowAt(MsgId showAtMsgId) {
 
 	_delayedShowAtRequest =
 	    MTP::send(MTPmessages_GetHistory(from->input, MTP_int(offset_id), MTP_int(0), MTP_int(offset),
-	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0)),
+	                                     MTP_int(loadCount), MTP_int(0), MTP_int(0), MTP_int(0)),
 	              rpcDone(&HistoryWidget::messagesReceived, from), rpcFail(&HistoryWidget::messagesFailed));
 }
 
@@ -2864,7 +2866,7 @@ void HistoryWidget::saveEditMsg() {
 	}
 	_saveEditMsgRequestId = MTP::send(
 	    MTPmessages_EditMessage(MTP_flags(sendFlags), _history->peer->input, MTP_int(_editMsgId),
-	                            MTP_string(sending.text), MTPnullMarkup, sentEntities),
+	                            MTP_string(sending.text), MTPnullMarkup, sentEntities, MTP_inputGeoPointEmpty()),
 	    rpcDone(&HistoryWidget::saveEditMsgDone, _history), rpcFail(&HistoryWidget::saveEditMsgFail, _history));
 }
 
@@ -4785,9 +4787,6 @@ void HistoryWidget::onThumbDocumentUploaded(const FullMsgId &newId, bool silent,
 
 void HistoryWidget::onPhotoProgress(const FullMsgId &newId) {
 	if (auto item = App::histItemById(newId)) {
-		auto photo = (item->getMedia() && item->getMedia()->type() == MediaTypePhoto) ?
-		                 static_cast<HistoryPhoto *>(item->getMedia())->photo() :
-		                 nullptr;
 		if (!item->isPost()) {
 			updateSendAction(item->history(), SendAction::Type::UploadPhoto, 0);
 		}
@@ -5570,7 +5569,6 @@ void HistoryWidget::onInlineResultSend(InlineBots::Result *result, UserData *bot
 
 	bool lastKeyboardUsed = lastForceReplyReplied();
 
-	bool out = !_peer->isSelf(), unread = !_peer->isSelf();
 	auto flags = NewMessageFlags(_peer) | MTPDmessage::Flag::f_media; // unread, out
 	auto sendFlags = MTPmessages_SendInlineBotResult::Flag::f_clear_draft | 0;
 	if (replyToId()) {
@@ -5667,7 +5665,9 @@ void HistoryWidget::updatePinnedBar(bool force) {
 		update();
 	} else if (force) {
 		if (_peer && _peer->isMegagroup()) {
-			_peer->asChannel()->mgInfo->pinnedMsgId = 0;
+			if (auto channel = _peer->asChannel()) {
+				channel->clearPinnedMessage();
+			}
 		}
 		destroyPinnedBar();
 		updateControlsGeometry();
@@ -5676,8 +5676,9 @@ void HistoryWidget::updatePinnedBar(bool force) {
 
 bool HistoryWidget::pinnedMsgVisibilityUpdated() {
 	auto result = false;
-	auto pinnedMsgId = (_peer && _peer->isMegagroup()) ? _peer->asChannel()->mgInfo->pinnedMsgId : 0;
-	if (pinnedMsgId && !_peer->asChannel()->canPinMessages()) {
+	auto channel = _peer ? _peer->asChannel() : nullptr;
+	auto pinnedMsgId = channel ? channel->pinnedMessageId() : 0;
+	if (pinnedMsgId && !channel->canPinMessages()) {
 		auto it = Global::HiddenPinnedMessages().constFind(_peer->id);
 		if (it != Global::HiddenPinnedMessages().cend()) {
 			if (it.value() == pinnedMsgId) {
@@ -5750,7 +5751,6 @@ bool HistoryWidget::sendExistingDocument(DocumentData *doc, const QString &capti
 
 	bool lastKeyboardUsed = lastForceReplyReplied();
 
-	bool out = !_peer->isSelf(), unread = !_peer->isSelf();
 	auto flags = NewMessageFlags(_peer) | MTPDmessage::Flag::f_media; // unread, out
 	auto sendFlags = MTPmessages_SendMedia::Flags(0);
 	if (replyToId()) {
@@ -5814,7 +5814,6 @@ void HistoryWidget::sendExistingPhoto(PhotoData *photo, const QString &caption) 
 
 	bool lastKeyboardUsed = lastForceReplyReplied();
 
-	bool out = !_peer->isSelf(), unread = !_peer->isSelf();
 	auto flags = NewMessageFlags(_peer) | MTPDmessage::Flag::f_media; // unread, out
 	auto sendFlags = MTPmessages_SendMedia::Flags(0);
 	if (replyToId()) {
@@ -5989,23 +5988,19 @@ void HistoryWidget::onEditMessage() {
 }
 
 void HistoryWidget::onPinMessage() {
-	HistoryItem *to = App::contextItem();
-	if (!to || !to->canPin() || !_peer || !_peer->isMegagroup()) return;
+	auto to = App::contextItem();
+	if (!to || !to->canPin()) return;
 
 	Ui::show(Box<PinMessageBox>(_peer->asChannel(), to->id));
 }
 
 void HistoryWidget::onUnpinMessage() {
-	if (!_peer || !_peer->isMegagroup()) return;
+	if (!_peer || !_peer->isChannel()) return;
 
 	Ui::show(Box<ConfirmBox>(lang(lng_pinned_unpin_sure), lang(lng_pinned_unpin), base::lambda_guarded(this, [this] {
-		                         if (!_peer || !_peer->isMegagroup()) return;
-
-		                         _peer->asChannel()->mgInfo->pinnedMsgId = 0;
-		                         if (pinnedMsgVisibilityUpdated()) {
-			                         updateControlsGeometry();
-			                         update();
-		                         }
+		                         auto channel = _peer ? _peer->asChannel() : nullptr;
+		                         if (!channel) return;
+		                         channel->clearPinnedMessage();
 
 		                         Ui::hideLayer();
 		                         MTP::send(MTPchannels_UpdatePinnedMessage(
@@ -6021,8 +6016,10 @@ void HistoryWidget::unpinDone(const MTPUpdates &updates) {
 }
 
 void HistoryWidget::onPinnedHide() {
-	if (!_peer || !_peer->isMegagroup()) return;
-	if (!_peer->asChannel()->mgInfo->pinnedMsgId) {
+	auto channel = _peer ? _peer->asChannel() : nullptr;
+	if (!channel) return;
+	auto pinnedId = channel->pinnedMessageId();
+	if (!pinnedId) {
 		if (pinnedMsgVisibilityUpdated()) {
 			updateControlsGeometry();
 			update();
@@ -6030,10 +6027,10 @@ void HistoryWidget::onPinnedHide() {
 		return;
 	}
 
-	if (_peer->asChannel()->canPinMessages()) {
+	if (channel->canPinMessages()) {
 		onUnpinMessage();
 	} else {
-		Global::RefHiddenPinnedMessages().insert(_peer->id, _peer->asChannel()->mgInfo->pinnedMsgId);
+		Global::RefHiddenPinnedMessages().insert(_peer->id, pinnedId);
 		Local::writeUserSettings();
 		if (pinnedMsgVisibilityUpdated()) {
 			updateControlsGeometry();
@@ -6877,8 +6874,6 @@ void HistoryWidget::drawPinnedBar(Painter &p) {
 	Expects(_pinnedBar != nullptr);
 
 	auto top = _topBar->bottomNoMargins();
-	Text *from = 0, *text = 0;
-	bool serviceColor = false, hasForward = readyToForward();
 	ImagePtr preview;
 	p.fillRect(myrtlrect(0, top, _chatWidth, st::historyReplyHeight), st::historyPinnedBg);
 

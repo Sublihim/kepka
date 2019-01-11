@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "dialogs/dialogs_inner_widget.h"
 
 #include "apiwrap.h"
@@ -1285,11 +1287,9 @@ void DialogsInner::contextMenuEvent(QContextMenuEvent *e) {
 	}
 
 	_menu = new Ui::PopupMenu(nullptr);
-	App::main()->fillPeerMenu(_menuPeer,
-	                          [this](const QString &text, base::lambda<void()> callback) {
-		                          return _menu->addAction(text, std::move(callback));
-	                          },
-	                          true);
+	App::main()->fillPeerMenu(
+	    _menuPeer,
+	    [this](const QString &text, Fn<void()> callback) { return _menu->addAction(text, std::move(callback)); }, true);
 	connect(_menu, SIGNAL(destroyed(QObject *)), this, SLOT(onMenuDestroyed(QObject *)));
 	_menu->popup(e->globalPos());
 	e->accept();
@@ -2028,40 +2028,24 @@ void DialogsInner::loadPeerPhotos() {
 				_filterResults[from]->history()->peer->loadUserpic();
 			}
 		}
-
-		from = (yFrom > filteredOffset() + st::searchedBarHeight ?
-		            ((yFrom - filteredOffset() - st::searchedBarHeight) / qint32(st::dialogsRowHeight)) :
-		            0) -
-		       _filterResults.size();
+		auto offset = filteredOffset() + st::searchedBarHeight;
+		from = (yFrom > offset ? ((yFrom - offset) / qint32(st::dialogsRowHeight)) : 0) - _filterResults.size();
 		if (from < 0) from = 0;
 		if (from < _peerSearchResults.size()) {
-			qint32 to = (yTo > filteredOffset() + st::searchedBarHeight ?
-			                 ((yTo - filteredOffset() - st::searchedBarHeight) / qint32(st::dialogsRowHeight)) :
-			                 0) -
-			            _filterResults.size() + 1;
+			qint32 to =
+			    (yTo > offset ? ((yTo - offset) / qint32(st::dialogsRowHeight)) : 0) - _filterResults.size() + 1;
 			if (to > _peerSearchResults.size()) to = _peerSearchResults.size();
 
 			for (; from < to; ++from) {
 				_peerSearchResults[from]->peer->loadUserpic();
 			}
 		}
-		from = (yFrom > filteredOffset() +
-		                    ((_peerSearchResults.empty() ? 0 : st::searchedBarHeight) + st::searchedBarHeight) ?
-		            ((yFrom - filteredOffset() - (_peerSearchResults.empty() ? 0 : st::searchedBarHeight) -
-		              st::searchedBarHeight) /
-		             qint32(st::dialogsRowHeight)) :
-		            0) -
-		       _filterResults.size() - _peerSearchResults.size();
+		auto offset2 = offset + (_peerSearchResults.empty() ? 0 : st::searchedBarHeight);
+		auto results_size = _filterResults.size() + _peerSearchResults.size();
+		from = (yFrom > offset2 ? ((yFrom - offset2) / qint32(st::dialogsRowHeight)) : 0) - results_size;
 		if (from < 0) from = 0;
 		if (from < _searchResults.size()) {
-			qint32 to = (yTo > filteredOffset() + (_peerSearchResults.empty() ? 0 : st::searchedBarHeight) +
-			                         st::searchedBarHeight ?
-			                 ((yTo - filteredOffset() - (_peerSearchResults.empty() ? 0 : st::searchedBarHeight) -
-			                   st::searchedBarHeight) /
-			                  qint32(st::dialogsRowHeight)) :
-			                 0) -
-			            _filterResults.size() - _peerSearchResults.size() + 1,
-			       w = width();
+			qint32 to = (yTo > offset2 ? ((yTo - offset2) / qint32(st::dialogsRowHeight)) : 0) - results_size + 1;
 			if (to > _searchResults.size()) to = _searchResults.size();
 
 			for (; from < to; ++from) {

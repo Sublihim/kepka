@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "profile/profile_block_widget.h"
@@ -87,16 +89,16 @@ public:
 		qSort(_items.begin(), _items.end(), std::move(predicate));
 	}
 
-	void setPreloadMoreCallback(base::lambda<void()> callback) {
+	void setPreloadMoreCallback(Fn<void()> callback) {
 		_preloadMoreCallback = std::move(callback);
 	}
-	void setSelectedCallback(base::lambda<void(PeerData *)> callback) {
+	void setSelectedCallback(Fn<void(PeerData *)> callback) {
 		_selectedCallback = std::move(callback);
 	}
-	void setRemovedCallback(base::lambda<void(PeerData *)> callback) {
+	void setRemovedCallback(Fn<void(PeerData *)> callback) {
 		_removedCallback = std::move(callback);
 	}
-	void setUpdateItemCallback(base::lambda<void(Item *)> callback) {
+	void setUpdateItemCallback(Fn<void(Item *)> callback) {
 		_updateItemCallback = std::move(callback);
 	}
 
@@ -139,10 +141,10 @@ private:
 
 	const style::ProfilePeerListItem &_st;
 
-	base::lambda<void()> _preloadMoreCallback;
-	base::lambda<void(PeerData *)> _selectedCallback;
-	base::lambda<void(PeerData *)> _removedCallback;
-	base::lambda<void(Item *)> _updateItemCallback;
+	Fn<void()> _preloadMoreCallback;
+	Fn<void(PeerData *)> _selectedCallback;
+	Fn<void(PeerData *)> _removedCallback;
+	Fn<void(Item *)> _updateItemCallback;
 
 	QList<Item *> _items;
 

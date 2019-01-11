@@ -1,26 +1,27 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
-#include "base/lambda.h"
 #include "base/variant.h"
 #include "facades.h"
 #include "mtproto/rpc_sender.h"
@@ -38,21 +39,21 @@ class Sender {
 		RequestBuilder &operator=(RequestBuilder &&other) = delete;
 
 	protected:
-		using FailPlainHandler = base::lambda_once<void(const RPCError &error)>;
-		using FailRequestIdHandler = base::lambda_once<void(const RPCError &error, mtpRequestId requestId)>;
+		using FailPlainHandler = FnMut<void(const RPCError &error)>;
+		using FailRequestIdHandler = FnMut<void(const RPCError &error, mtpRequestId requestId)>;
 		enum class FailSkipPolicy {
 			Simple,
 			HandleFlood,
 			HandleAll,
 		};
 		template <typename Response> struct DonePlainPolicy {
-			using Callback = base::lambda_once<void(const Response &result)>;
+			using Callback = FnMut<void(const Response &result)>;
 			static void handle(Callback &&handler, mtpRequestId requestId, Response &&result) {
 				handler(result);
 			}
 		};
 		template <typename Response> struct DoneRequestIdPolicy {
-			using Callback = base::lambda_once<void(const Response &result, mtpRequestId requestId)>;
+			using Callback = FnMut<void(const Response &result, mtpRequestId requestId)>;
 			static void handle(Callback &&handler, mtpRequestId requestId, Response &&result) {
 				handler(result, requestId);
 			}
@@ -84,13 +85,13 @@ class Sender {
 		};
 
 		struct FailPlainPolicy {
-			using Callback = base::lambda_once<void(const RPCError &error)>;
+			using Callback = FnMut<void(const RPCError &error)>;
 			static void handle(Callback &&handler, mtpRequestId requestId, const RPCError &error) {
 				handler(error);
 			}
 		};
 		struct FailRequestIdPolicy {
-			using Callback = base::lambda_once<void(const RPCError &error, mtpRequestId requestId)>;
+			using Callback = FnMut<void(const RPCError &error, mtpRequestId requestId)>;
 			static void handle(Callback &&handler, mtpRequestId requestId, const RPCError &error) {
 				handler(error, requestId);
 			}
@@ -215,25 +216,24 @@ public:
 			return *this;
 		}
 		SpecificRequestBuilder &
-		done(base::lambda_once<void(const typename Request::ResponseType &result)> callback) WARN_UNUSED_RESULT {
+		done(FnMut<void(const typename Request::ResponseType &result)> callback) WARN_UNUSED_RESULT {
 			setDoneHandler(MakeShared<DoneHandler<typename Request::ResponseType, DonePlainPolicy>>(
 			    sender(), std::move(callback)));
 			return *this;
 		}
 		SpecificRequestBuilder &
-		done(base::lambda_once<void(const typename Request::ResponseType &result, mtpRequestId requestId)> callback)
+		done(FnMut<void(const typename Request::ResponseType &result, mtpRequestId requestId)> callback)
 		    WARN_UNUSED_RESULT {
 			setDoneHandler(MakeShared<DoneHandler<typename Request::ResponseType, DoneRequestIdPolicy>>(
 			    sender(), std::move(callback)));
 			return *this;
 		}
-		SpecificRequestBuilder &
-		fail(base::lambda_once<void(const RPCError &error)> callback) noexcept WARN_UNUSED_RESULT {
+		SpecificRequestBuilder &fail(FnMut<void(const RPCError &error)> callback) noexcept WARN_UNUSED_RESULT {
 			setFailHandler(std::move(callback));
 			return *this;
 		}
-		SpecificRequestBuilder &fail(base::lambda_once<void(const RPCError &error, mtpRequestId requestId)>
-		                                 callback) noexcept WARN_UNUSED_RESULT {
+		SpecificRequestBuilder &
+		fail(FnMut<void(const RPCError &error, mtpRequestId requestId)> callback) noexcept WARN_UNUSED_RESULT {
 			setFailHandler(std::move(callback));
 			return *this;
 		}

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "inline_bots/inline_results_widget.h"
 #include "apiwrap.h"
 #include "auth_session.h"
@@ -427,7 +429,7 @@ void Inner::refreshSwitchPmButton(const CacheEntry *entry) {
 		_switchPmStartToken.clear();
 	} else {
 		if (!_switchPmButton) {
-			_switchPmButton.create(this, base::lambda<QString()>(), st::switchPmButton);
+			_switchPmButton.create(this, Fn<QString()>(), st::switchPmButton);
 			_switchPmButton->show();
 			_switchPmButton->setTextTransform(Ui::RoundButton::TextTransform::NoTransform);
 			connect(_switchPmButton, SIGNAL(clicked()), this, SLOT(onSwitchPm()));
@@ -448,7 +450,7 @@ int Inner::refreshInlineRows(PeerData *queryPeer, UserData *bot, const CacheEntr
 	_inlineBot = bot;
 	_inlineQueryPeer = queryPeer;
 	refreshSwitchPmButton(entry);
-	auto clearResults = [this, entry]() {
+	auto clearResults = [entry]() {
 		if (!entry) {
 			return true;
 		}
@@ -589,7 +591,6 @@ bool Inner::inlineItemVisible(const ItemBase *layout) {
 	int row = position / MatrixRowShift, col = position % MatrixRowShift;
 	Assert((row < _rows.size()) && (col < _rows[row].items.size()));
 
-	auto &inlineItems = _rows[row].items;
 	int top = st::stickerPanPadding;
 	for (qint32 i = 0; i < row; ++i) {
 		top += _rows.at(i).height;
@@ -603,7 +604,6 @@ void Inner::updateSelected() {
 		return;
 	}
 
-	auto newSelected = -1;
 	auto p = mapFromGlobal(_lastMousePos);
 
 	int sx = (rtl() ? width() - p.x() : p.x()) - (st::inlineResultsLeft - st::buttonRadius);

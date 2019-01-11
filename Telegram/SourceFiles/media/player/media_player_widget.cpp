@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "media/player/media_player_widget.h"
 #include "app.h"
 #include "facades.h"
@@ -124,7 +126,7 @@ Widget::Widget(QWidget *parent)
 	_playPause->setClickedCallback([this] { instance()->playPauseCancelClicked(_type); });
 
 	updateVolumeToggleIcon();
-	_volumeToggle->setClickedCallback([this] {
+	_volumeToggle->setClickedCallback([] {
 		Global::SetSongVolume((Global::SongVolume() > 0) ? 0. : Global::RememberedSongVolume());
 		mixer()->setSongVolume(Global::SongVolume());
 		Global::RefSongVolumeChanged().notify();
@@ -132,7 +134,7 @@ Widget::Widget(QWidget *parent)
 	subscribe(Global::RefSongVolumeChanged(), [this] { updateVolumeToggleIcon(); });
 
 	updateRepeatTrackIcon();
-	_repeatTrack->setClickedCallback([this] { instance()->toggleRepeat(AudioMsgId::Type::Song); });
+	_repeatTrack->setClickedCallback([] { instance()->toggleRepeat(AudioMsgId::Type::Song); });
 
 	subscribe(instance()->repeatChangedNotifier(), [this](AudioMsgId::Type type) {
 		if (type == _type) {
@@ -180,7 +182,7 @@ void Widget::updateVolumeToggleIcon() {
 	_volumeToggle->setIconOverride(icon());
 }
 
-void Widget::setCloseCallback(base::lambda<void()> callback) {
+void Widget::setCloseCallback(Fn<void()> callback) {
 	_closeCallback = std::move(callback);
 	_close->setClickedCallback([this] { stopAndClose(); });
 }
@@ -242,7 +244,6 @@ void Widget::handleSeekProgress(double progress) {
 void Widget::handleSeekFinished(double progress) {
 	if (!_lastDurationMs) return;
 
-	auto positionMs = snap(static_cast<TimeMs>(progress * _lastDurationMs), Q_INT64_C(0), _lastDurationMs);
 	_seekPositionMs = -1;
 
 	auto state = mixer()->currentState(_type);
@@ -538,10 +539,10 @@ void Widget::createPrevNextButtons() {
 	if (!_previousTrack) {
 		_previousTrack.create(this, st::mediaPlayerPreviousButton);
 		_previousTrack->show();
-		_previousTrack->setClickedCallback([this]() { instance()->previous(); });
+		_previousTrack->setClickedCallback([]() { instance()->previous(); });
 		_nextTrack.create(this, st::mediaPlayerNextButton);
 		_nextTrack->show();
-		_nextTrack->setClickedCallback([this]() { instance()->next(); });
+		_nextTrack->setClickedCallback([]() { instance()->next(); });
 		updatePlayPrevNextPositions();
 	}
 }

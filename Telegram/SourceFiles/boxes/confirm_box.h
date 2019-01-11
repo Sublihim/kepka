@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "boxes/abstract_box.h"
@@ -31,21 +33,17 @@ class FlatLabel;
 class InformBox;
 class ConfirmBox : public BoxContent, public ClickHandlerHost {
 public:
-	ConfirmBox(QWidget *, const QString &text,
-	           base::lambda_once<void()> confirmedCallback = base::lambda_once<void()>(),
-	           base::lambda_once<void()> cancelledCallback = base::lambda_once<void()>());
+	ConfirmBox(QWidget *, const QString &text, FnMut<void()> confirmedCallback = FnMut<void()>(),
+	           FnMut<void()> cancelledCallback = FnMut<void()>());
 	ConfirmBox(QWidget *, const QString &text, const QString &confirmText,
-	           base::lambda_once<void()> confirmedCallback = base::lambda_once<void()>(),
-	           base::lambda_once<void()> cancelledCallback = base::lambda_once<void()>());
+	           FnMut<void()> confirmedCallback = FnMut<void()>(), FnMut<void()> cancelledCallback = FnMut<void()>());
 	ConfirmBox(QWidget *, const QString &text, const QString &confirmText, const style::RoundButton &confirmStyle,
-	           base::lambda_once<void()> confirmedCallback = base::lambda_once<void()>(),
-	           base::lambda_once<void()> cancelledCallback = base::lambda_once<void()>());
+	           FnMut<void()> confirmedCallback = FnMut<void()>(), FnMut<void()> cancelledCallback = FnMut<void()>());
 	ConfirmBox(QWidget *, const QString &text, const QString &confirmText, const QString &cancelText,
-	           base::lambda_once<void()> confirmedCallback = base::lambda_once<void()>(),
-	           base::lambda_once<void()> cancelledCallback = base::lambda_once<void()>());
+	           FnMut<void()> confirmedCallback = FnMut<void()>(), FnMut<void()> cancelledCallback = FnMut<void()>());
 	ConfirmBox(QWidget *, const QString &text, const QString &confirmText, const style::RoundButton &confirmStyle,
-	           const QString &cancelText, base::lambda_once<void()> confirmedCallback = base::lambda_once<void()>(),
-	           base::lambda_once<void()> cancelledCallback = base::lambda_once<void()>());
+	           const QString &cancelText, FnMut<void()> confirmedCallback = FnMut<void()>(),
+	           FnMut<void()> cancelledCallback = FnMut<void()>());
 
 	void updateLink();
 
@@ -70,8 +68,8 @@ protected:
 
 private:
 	struct InformBoxTag {};
-	ConfirmBox(const InformBoxTag &, const QString &text, const QString &doneText, base::lambda<void()> closedCallback);
-	base::lambda_once<void()> generateInformCallback(base::lambda<void()> closedCallback);
+	ConfirmBox(const InformBoxTag &, const QString &text, const QString &doneText, Fn<void()> closedCallback);
+	FnMut<void()> generateInformCallback(Fn<void()> closedCallback);
 	friend class InformBox;
 
 	void confirmed();
@@ -94,15 +92,14 @@ private:
 	bool _confirmed = false;
 	bool _cancelled = false;
 	bool _strictCancel = false;
-	base::lambda_once<void()> _confirmedCallback;
-	base::lambda_once<void()> _cancelledCallback;
+	FnMut<void()> _confirmedCallback;
+	FnMut<void()> _cancelledCallback;
 };
 
 class InformBox : public ConfirmBox {
 public:
-	InformBox(QWidget *, const QString &text, base::lambda<void()> closedCallback = base::lambda<void()>());
-	InformBox(QWidget *, const QString &text, const QString &doneText,
-	          base::lambda<void()> closedCallback = base::lambda<void()>());
+	InformBox(QWidget *, const QString &text, Fn<void()> closedCallback = Fn<void()>());
+	InformBox(QWidget *, const QString &text, const QString &doneText, Fn<void()> closedCallback = Fn<void()>());
 };
 
 class MaxInviteBox : public BoxContent {
@@ -171,7 +168,7 @@ private:
 	MsgId _msgId;
 
 	object_ptr<Ui::FlatLabel> _text;
-	object_ptr<Ui::Checkbox> _notify;
+	object_ptr<Ui::Checkbox> _notify = {nullptr};
 
 	mtpRequestId _requestId = 0;
 };

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/peer_list_box.h"
 #include "base/algorithm.h"
 
@@ -36,7 +38,7 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include "window/themes/window_theme.h"
 
 PeerListBox::PeerListBox(QWidget *, std::unique_ptr<PeerListController> controller,
-                         base::lambda<void(not_null<PeerListBox *>)> init)
+                         Fn<void(not_null<PeerListBox *>)> init)
     : _controller(std::move(controller))
     , _init(std::move(init)) {
 	Expects(_controller != nullptr);
@@ -247,13 +249,13 @@ void PeerListBox::peerListSetSearchMode(PeerListSearchMode mode) {
 	}
 }
 
-void PeerListBox::peerListSortRows(base::lambda<bool(PeerListRow &a, PeerListRow &b)> compare) {
+void PeerListBox::peerListSortRows(Fn<bool(PeerListRow &a, PeerListRow &b)> compare) {
 	_inner->reorderRows([compare = std::move(compare)](auto &&begin, auto &&end) {
 		std::sort(begin, end, [compare](auto &&a, auto &&b) { return compare(*a, *b); });
 	});
 }
 
-void PeerListBox::peerListPartitionRows(base::lambda<bool(PeerListRow &a)> border) {
+void PeerListBox::peerListPartitionRows(Fn<bool(PeerListRow &a)> border) {
 	_inner->reorderRows([border = std::move(border)](auto &&begin, auto &&end) {
 		std::stable_partition(begin, end, [border](auto &&current) { return border(*current); });
 	});
@@ -507,7 +509,7 @@ void PeerListRow::lazyInitialize() {
 	refreshStatus();
 }
 
-void PeerListRow::createCheckbox(base::lambda<void()> updateCallback) {
+void PeerListRow::createCheckbox(Fn<void()> updateCallback) {
 	_checkbox = std::make_unique<Ui::RoundImageCheckbox>(st::contactsPhotoCheckbox, std::move(updateCallback),
 	                                                     PaintUserpicCallback(_peer));
 }
@@ -921,7 +923,6 @@ void PeerListBox::Inner::paintRow(Painter &p, TimeMs ms, RowIndex index) {
 	row->lazyInitialize();
 
 	auto peer = row->peer();
-	auto user = peer->asUser();
 	auto active = (_pressed.index.value >= 0) ? _pressed : _selected;
 	auto selected = (active.index == index);
 	auto actionSelected = (selected && active.action);

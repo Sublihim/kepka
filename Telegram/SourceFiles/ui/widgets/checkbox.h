@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "styles/style_widgets.h"
@@ -28,12 +30,12 @@ namespace Ui {
 
 class AbstractCheckView {
 public:
-	AbstractCheckView(int duration, bool checked, base::lambda<void()> updateCallback);
+	AbstractCheckView(int duration, bool checked, Fn<void()> updateCallback);
 
 	void setCheckedFast(bool checked);
 	void setCheckedAnimated(bool checked);
 	void finishAnimation();
-	void setUpdateCallback(base::lambda<void()> updateCallback);
+	void setUpdateCallback(Fn<void()> updateCallback);
 	bool checked() const {
 		return _checked;
 	}
@@ -57,13 +59,13 @@ public:
 private:
 	int _duration = 0;
 	bool _checked = false;
-	base::lambda<void()> _updateCallback;
+	Fn<void()> _updateCallback;
 	Animation _toggleAnimation;
 };
 
 class CheckView : public AbstractCheckView {
 public:
-	CheckView(const style::Check &st, bool checked, base::lambda<void()> updateCallback);
+	CheckView(const style::Check &st, bool checked, Fn<void()> updateCallback);
 
 	void setStyle(const style::Check &st);
 
@@ -80,7 +82,7 @@ private:
 
 class RadioView : public AbstractCheckView {
 public:
-	RadioView(const style::Radio &st, bool checked, base::lambda<void()> updateCallback);
+	RadioView(const style::Radio &st, bool checked, Fn<void()> updateCallback);
 
 	void setStyle(const style::Radio &st);
 
@@ -97,7 +99,7 @@ private:
 
 class ToggleView : public AbstractCheckView {
 public:
-	ToggleView(const style::Toggle &st, bool checked, base::lambda<void()> updateCallback);
+	ToggleView(const style::Toggle &st, bool checked, Fn<void()> updateCallback);
 
 	void setStyle(const style::Toggle &st);
 
@@ -174,7 +176,7 @@ public:
 	    : _value(value)
 	    , _hasValue(true) {}
 
-	void setChangedCallback(base::lambda<void(int value)> callback) {
+	void setChangedCallback(Fn<void(int value)> callback) {
 		_changedCallback = std::move(callback);
 	}
 
@@ -199,7 +201,7 @@ private:
 
 	int _value = 0;
 	bool _hasValue = false;
-	base::lambda<void(int value)> _changedCallback;
+	Fn<void(int value)> _changedCallback;
 	std::vector<Radiobutton *> _buttons;
 };
 

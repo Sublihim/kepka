@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "boxes/abstract_box.h"
@@ -38,13 +40,13 @@ public:
 	SendFilesBox(QWidget *, const QStringList &files, CompressConfirm compressed);
 	SendFilesBox(QWidget *, const QString &phone, const QString &firstname, const QString &lastname);
 
-	void setConfirmedCallback(base::lambda<void(const QStringList &files, const QImage &image,
-	                                            std::unique_ptr<FileLoadTask::MediaInformation> information,
-	                                            bool compressed, const QString &caption, bool ctrlShiftEnter)>
+	void setConfirmedCallback(Fn<void(const QStringList &files, const QImage &image,
+	                                  std::unique_ptr<FileLoadTask::MediaInformation> information, bool compressed,
+	                                  const QString &caption, bool ctrlShiftEnter)>
 	                              callback) {
 		_confirmedCallback = std::move(callback);
 	}
-	void setCancelledCallback(base::lambda<void()> callback) {
+	void setCancelledCallback(Fn<void()> callback) {
 		_cancelledCallback = std::move(callback);
 	}
 
@@ -74,7 +76,7 @@ private:
 	void updateTitleText();
 	void updateBoxSize();
 	void updateControlsGeometry();
-	base::lambda<QString()> getSendButtonText() const;
+	Fn<QString()> getSendButtonText() const;
 
 	QString _titleText;
 	QStringList _files;
@@ -102,11 +104,10 @@ private:
 	QString _contactLastName;
 	EmptyUserpic _contactPhotoEmpty;
 
-	base::lambda<void(const QStringList &files, const QImage &image,
-	                  std::unique_ptr<FileLoadTask::MediaInformation> information, bool compressed,
-	                  const QString &caption, bool ctrlShiftEnter)>
+	Fn<void(const QStringList &files, const QImage &image, std::unique_ptr<FileLoadTask::MediaInformation> information,
+	        bool compressed, const QString &caption, bool ctrlShiftEnter)>
 	    _confirmedCallback;
-	base::lambda<void()> _cancelledCallback;
+	Fn<void()> _cancelledCallback;
 	bool _confirmed = false;
 
 	object_ptr<Ui::InputArea> _caption = {nullptr};

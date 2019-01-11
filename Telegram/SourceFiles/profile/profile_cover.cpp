@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "profile/profile_cover.h"
 
 #include "apiwrap.h"
@@ -473,15 +475,13 @@ void CoverWidget::clearButtons() {
 	}
 }
 
-void CoverWidget::addButton(base::lambda<QString()> textFactory, const char *slot,
-                            const style::RoundButton *replacementStyle) {
+void CoverWidget::addButton(Fn<QString()> textFactory, const char *slot, const style::RoundButton *replacementStyle) {
 	auto &buttonStyle = _buttons.isEmpty() ? st::profilePrimaryButton : st::profileSecondaryButton;
 	auto button = new Ui::RoundButton(this, std::move(textFactory), buttonStyle);
 	connect(button, SIGNAL(clicked()), this, slot);
 	button->show();
 
-	auto replacement =
-	    replacementStyle ? new Ui::RoundButton(this, base::lambda<QString()>(), *replacementStyle) : nullptr;
+	auto replacement = replacementStyle ? new Ui::RoundButton(this, Fn<QString()>(), *replacementStyle) : nullptr;
 	if (replacement) {
 		connect(replacement, SIGNAL(clicked()), this, slot);
 		replacement->hide();

@@ -1,27 +1,28 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "base/assertion.h"
-#include "base/lambda.h"
 #include "base/type_traits.h"
 #include "core/utils.h"
 #include <QSharedPointer>
@@ -31,16 +32,14 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 namespace base {
 namespace internal {
 
-using ObservableCallHandlers = base::lambda<void()>;
+using ObservableCallHandlers = Fn<void()>;
 void RegisterPendingObservable(ObservableCallHandlers *handlers);
 void UnregisterActiveObservable(ObservableCallHandlers *handlers);
 void UnregisterObservable(ObservableCallHandlers *handlers);
 
-template <typename EventType> struct SubscriptionHandlerHelper {
-	using type = base::lambda<void(parameter_type<EventType>)>;
-};
+template <typename EventType> struct SubscriptionHandlerHelper { using type = Fn<void(parameter_type<EventType>)>; };
 
-template <> struct SubscriptionHandlerHelper<void> { using type = base::lambda<void()>; };
+template <> struct SubscriptionHandlerHelper<void> { using type = Fn<void()>; };
 
 template <typename EventType> using SubscriptionHandler = typename SubscriptionHandlerHelper<EventType>::type;
 

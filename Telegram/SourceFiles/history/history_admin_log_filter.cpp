@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history_admin_log_filter.h"
 
 #include "app.h"
@@ -150,7 +152,7 @@ QPoint UserCheckbox::prepareRippleStartPosition() const {
 class FilterBox::Inner : public TWidget, private base::Subscriber {
 public:
 	Inner(QWidget *parent, not_null<ChannelData *> channel, const std::vector<not_null<UserData *>> &admins,
-	      const FilterValue &filter, base::lambda<void()> changedCallback);
+	      const FilterValue &filter, Fn<void()> changedCallback);
 
 	template <typename Widget> QPointer<Widget> addRow(object_ptr<Widget> widget, int marginTop) {
 		widget->setParent(this);
@@ -191,12 +193,12 @@ private:
 	};
 	std::vector<Row> _rows;
 
-	base::lambda<void()> _changedCallback;
+	Fn<void()> _changedCallback;
 };
 
 FilterBox::Inner::Inner(QWidget *parent, not_null<ChannelData *> channel,
                         const std::vector<not_null<UserData *>> &admins, const FilterValue &filter,
-                        base::lambda<void()> changedCallback)
+                        Fn<void()> changedCallback)
     : TWidget(parent)
     , _channel(channel)
     , _changedCallback(std::move(changedCallback)) {
@@ -365,7 +367,7 @@ void FilterBox::Inner::resizeEvent(QResizeEvent *e) {
 }
 
 FilterBox::FilterBox(QWidget *, not_null<ChannelData *> channel, const std::vector<not_null<UserData *>> &admins,
-                     const FilterValue &filter, base::lambda<void(FilterValue &&filter)> saveCallback)
+                     const FilterValue &filter, Fn<void(FilterValue &&filter)> saveCallback)
     : BoxContent()
     , _channel(channel)
     , _admins(admins)

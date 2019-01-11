@@ -7,24 +7,16 @@ if (LINUX)
     endif()
 endif()
 
-if (PACKAGED_BUILD)
-    add_definitions(-DTDESKTOP_DISABLE_REGISTER_CUSTOM_SCHEME)
-    add_definitions(-DTDESKTOP_DISABLE_DESKTOP_FILE_GENERATION)
-endif()
-
-
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -H")
-
+set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ##================================================
 ## Codegen Tools
 ##================================================
-
 include_directories(SourceFiles)
 add_subdirectory(SourceFiles/codegen)
 
 file(MAKE_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/styles)
 
-#-w<(PRODUCT_DIR)/../.. -- wtf is that
 add_custom_command(
     COMMENT "Generating palette"
     OUTPUT
@@ -111,7 +103,7 @@ add_custom_command(
         scheme.cpp
         scheme.h
     COMMAND
-        python ${CMAKE_CURRENT_SOURCE_DIR}/SourceFiles/codegen/scheme/codegen_scheme.py
+        ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/SourceFiles/codegen/scheme/codegen_scheme.py
         -o${CMAKE_CURRENT_BINARY_DIR} ${CMAKE_CURRENT_SOURCE_DIR}/Resources/scheme.tl
     WORKING_DIRECTORY .
     DEPENDS
@@ -144,7 +136,6 @@ list(APPEND style_files
 )
 
 foreach (src ${style_files})
-#      '-w<(PRODUCT_DIR)/../..',
     get_filename_component(src_file ${src} NAME)
     add_custom_command(
         COMMENT "Generating ${src_file}"
@@ -176,21 +167,11 @@ endforeach()
 ##================================================
 ## Branding
 ##================================================
-
-set(KEPKA_APPNAME "Kepka"
-    CACHE STRING "Application name")
-
 configure_file(SourceFiles/config.h.in ${CMAKE_CURRENT_BINARY_DIR}/config.h)
-include_directories(${CMAKE_CURRENT_BINARY_DIR})
 
 ##================================================
 ## Kepka app
 ##================================================
-
-#add_subdirectory(SourceFiles/boxes)
-# ^ Unused: cotire PCH needs more rigid structure with targets defined from the same
-# cmakelists file. To do: get rid of the PCH requirement for more flexible build structure.
-
 add_executable(Kepka WIN32 MACOSX_BUNDLE
     ${CMAKE_CURRENT_BINARY_DIR}/styles/palette.cpp
     ${CMAKE_CURRENT_BINARY_DIR}/numbers.cpp
@@ -498,6 +479,7 @@ if (APPLE)
 endif()
 
 if (WIN32)
+    configure_file(Resources/winrc/Kepka.rc.in Resources/winrc/Kepka.rc)
     target_sources(Kepka PRIVATE
         SourceFiles/platform/win/audio_win.cpp
         SourceFiles/platform/win/file_utilities_win.cpp
@@ -509,7 +491,7 @@ if (WIN32)
         SourceFiles/platform/win/windows_dlls.cpp
         SourceFiles/platform/win/windows_event_filter.cpp
 
-        Resources/winrc/Telegram.rc
+        ${CMAKE_CURRENT_BINARY_DIR}/Resources/winrc/Kepka.rc
     )
     set(tg_RESOURCES Resources/qrc/telegram_wnd.qrc)
 endif()
@@ -543,7 +525,6 @@ list(APPEND tg_RESOURCES
 qt5_add_resources(tg_RESOURCES_RCC ${tg_RESOURCES})
 
 target_sources(Kepka PRIVATE
-    ${tg_RESOURCES}
     ${tg_RESOURCES_RCC}
 )
 
@@ -552,7 +533,7 @@ if (APPLE)
         ThirdParty/SPMediaKeyTap/SPMediaKeyTap.m
         ThirdParty/SPMediaKeyTap/SPInvocationGrabbing/NSObject+SPInvocationGrabbing.m
     )
-    include_directories(ThirdParty/SPMediaKeyTap)
+    target_include_directories(Kepka PRIVATE ThirdParty/SPMediaKeyTap)
 endif()
 
 target_sources(Kepka PRIVATE
@@ -563,16 +544,12 @@ target_sources(Kepka PRIVATE
     ThirdParty/emoji_suggestions/emoji_suggestions.cpp
 )
 
-include_directories(ThirdParty) # For minizip/ but we use fully-qualified
-# include path to avoid ambiguity.
-
-include_directories(ThirdParty/GSL/include ThirdParty/variant/include
-    ThirdParty/emoji_suggestions ThirdParty/libtgvoip)
-
-include_directories(SourceFiles)
-
-include_directories(${OPENAL_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
-    ${OPUS_INCLUDE_DIR} ${FFMPEG_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS} ${PULSEAUDIO_INCLUDE_DIR})
+include_directories(ThirdParty/GSL/include
+    ThirdParty/variant/include
+    ThirdParty/emoji_suggestions
+    ThirdParty/libtgvoip
+    ThirdParty
+)
 
 add_subdirectory(ThirdParty/libtgvoip)
 
@@ -581,7 +558,7 @@ if(NOT WIN32)
 endif()
 
 if (WIN32)
-    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS -D_USING_V110_SDK71_
+    add_definitions(-D_CRT_SECURE_NO_WARNINGS -D_SCL_SECURE_NO_WARNINGS
         -DWIN32 -D_WINDOWS -D_UNICODE -DUNICODE
         -DWINAPI_FAMILY=WINAPI_FAMILY_DESKTOP_APP
         -DHAVE_STDINT_H -DNOMINMAX)
@@ -589,9 +566,6 @@ endif()
 
 add_definitions(-DAL_LIBTYPE_STATIC)
 add_definitions(-DAL_ALEXT_PROTOTYPES)
-add_definitions(-DTGVOIP_USE_CXX11_LIB)
-
-add_definitions(-DTDESKTOP_DISABLE_CRASH_REPORTS)
 
 if (LINUX)
     add_definitions(-D_REENTRANT)
@@ -640,13 +614,29 @@ if(NOT WIN32)
     set_flag_if_supported(Kepka WNCE -Wno-c++1z-extensions)
 endif()
 
-target_compile_definitions(Kepka PRIVATE ${FFMPEG_DEFINITIONS})
+target_compile_definitions(Kepka PRIVATE
+    TDESKTOP_DISABLE_CRASH_REPORTS
+    ${FFMPEG_DEFINITIONS})
+
+if (PACKAGED_BUILD)
+    target_compile_definitions(Kepka PRIVATE
+        TDESKTOP_DISABLE_REGISTER_CUSTOM_SCHEME
+        TDESKTOP_DISABLE_DESKTOP_FILE_GENERATION)
+endif()
+
+if(MSVC AND MSVC_VERSION GREATER_EQUAL 1912)
+    target_compile_options(Kepka PRIVATE /permissive-)
+endif()
+
+target_include_directories(Kepka PRIVATE ${OPENAL_INCLUDE_DIRS} ${ZLIB_INCLUDE_DIRS} ${OPENSSL_INCLUDE_DIR}
+    ${OPUS_INCLUDE_DIR} ${FFMPEG_INCLUDE_DIRS} ${ALSA_INCLUDE_DIRS} ${PULSEAUDIO_INCLUDE_DIR} )
 
 target_link_libraries(Kepka
     Qt5::Core
     Qt5::Widgets
     Qt5::Network
     Qt5::GuiPrivate
+    Threads::Threads
     tgvoip
     ${OPENAL_LIBRARY}
     ${FFMPEG_LIBRARIES}
@@ -705,22 +695,26 @@ if (LINUX)
     target_link_libraries(Kepka Qt5::DBus dl ${ALSA_LIBRARIES} ${PULSEAUDIO_LIBRARIES})
 endif()
 
-target_link_libraries(Kepka Threads::Threads)
-
 ##================================================
 ## Installlation
 ##================================================
 
 include(GNUInstallDirs)
 
-set_target_properties(Kepka PROPERTIES OUTPUT_NAME "kepka")
-install(TARGETS Kepka RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR})
+set_target_properties(Kepka PROPERTIES
+    OUTPUT_NAME "kepka"
+    AUTOMOC ON
+)
+
+install(TARGETS Kepka
+    RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR}
+    BUNDLE DESTINATION ${CMAKE_INSTALL_BINDIR})
 
 install(FILES "${CMAKE_SOURCE_DIR}/lib/xdg/kepka.desktop"
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/applications
 )
 install(FILES "${CMAKE_SOURCE_DIR}/lib/xdg/tg.protocol"
-    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/kservices5/tg.protocol
+    DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/kservices5
 )
 install(FILES "${CMAKE_SOURCE_DIR}/lib/xdg/kepka.appdata.xml"
     DESTINATION ${CMAKE_INSTALL_DATAROOTDIR}/metainfo
@@ -737,8 +731,7 @@ endforeach(icon_size)
 ## Tests
 ##================================================
 
-if (BUILD_TESTING)
+if(BUILD_TESTING)
     include_directories(ThirdParty/Catch/single_include)
-
     add_subdirectory(SourceFiles/base/tests)
 endif()

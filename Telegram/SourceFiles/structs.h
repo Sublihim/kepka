@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include <QPair>
@@ -755,7 +757,6 @@ struct MegagroupInfo {
 
 	UserData *creator = nullptr; // nullptr means unknown
 	int botStatus = 0; // -1 - no bots, 0 - unknown, 1 - one bot, that sees all history, 2 - other
-	MsgId pinnedMsgId = 0;
 	bool joinedMessageFound = false;
 	MTPInputStickerSet stickerSet = MTP_inputStickerSetEmpty();
 
@@ -910,9 +911,6 @@ public:
 	bool canAddAdmins() const {
 		return adminRights().is_add_admins() || amCreator();
 	}
-	bool canPinMessages() const {
-		return adminRights().is_pin_messages() || amCreator();
-	}
 	bool canPublish() const {
 		return adminRights().is_post_messages() || amCreator();
 	}
@@ -997,6 +995,16 @@ public:
 	}
 	void setRestrictionReason(const QString &reason);
 
+	MsgId pinnedMessageId() const {
+		return _pinnedMessageId;
+	}
+	void setPinnedMessageId(MsgId messageId);
+	void clearPinnedMessage() {
+		setPinnedMessageId(0);
+	}
+
+	bool canPinMessages() const;
+
 private:
 	bool canNotEditLastAdmin(not_null<UserData *> user) const;
 
@@ -1007,6 +1015,8 @@ private:
 	int _adminsCount = 1;
 	int _restrictedCount = 0;
 	int _kickedCount = 0;
+
+	MsgId _pinnedMessageId = 0;
 
 	MTPChannelAdminRights _adminRights = MTP_channelAdminRights(MTP_flags(0));
 	MTPChannelBannedRights _restrictedRights = MTP_channelBannedRights(MTP_flags(0), MTP_int(0));

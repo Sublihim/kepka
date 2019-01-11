@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/confirm_box.h"
 
 #include "apiwrap.h"
@@ -42,8 +44,7 @@ TextParseOptions _confirmBoxTextOptions = {
     Qt::LayoutDirectionAuto, // dir
 };
 
-ConfirmBox::ConfirmBox(QWidget *, const QString &text, base::lambda_once<void()> confirmedCallback,
-                       base::lambda_once<void()> cancelledCallback)
+ConfirmBox::ConfirmBox(QWidget *, const QString &text, FnMut<void()> confirmedCallback, FnMut<void()> cancelledCallback)
     : _confirmText(lang(lng_box_ok))
     , _cancelText(lang(lng_cancel))
     , _confirmStyle(st::defaultBoxButton)
@@ -53,8 +54,8 @@ ConfirmBox::ConfirmBox(QWidget *, const QString &text, base::lambda_once<void()>
 	init(text);
 }
 
-ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmText,
-                       base::lambda_once<void()> confirmedCallback, base::lambda_once<void()> cancelledCallback)
+ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmText, FnMut<void()> confirmedCallback,
+                       FnMut<void()> cancelledCallback)
     : _confirmText(confirmText)
     , _cancelText(lang(lng_cancel))
     , _confirmStyle(st::defaultBoxButton)
@@ -65,8 +66,8 @@ ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmTex
 }
 
 ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmText,
-                       const style::RoundButton &confirmStyle, base::lambda_once<void()> confirmedCallback,
-                       base::lambda_once<void()> cancelledCallback)
+                       const style::RoundButton &confirmStyle, FnMut<void()> confirmedCallback,
+                       FnMut<void()> cancelledCallback)
     : _confirmText(confirmText)
     , _cancelText(lang(lng_cancel))
     , _confirmStyle(confirmStyle)
@@ -77,7 +78,7 @@ ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmTex
 }
 
 ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmText, const QString &cancelText,
-                       base::lambda_once<void()> confirmedCallback, base::lambda_once<void()> cancelledCallback)
+                       FnMut<void()> confirmedCallback, FnMut<void()> cancelledCallback)
     : _confirmText(confirmText)
     , _cancelText(cancelText)
     , _confirmStyle(st::defaultBoxButton)
@@ -89,7 +90,7 @@ ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmTex
 
 ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmText,
                        const style::RoundButton &confirmStyle, const QString &cancelText,
-                       base::lambda_once<void()> confirmedCallback, base::lambda_once<void()> cancelledCallback)
+                       FnMut<void()> confirmedCallback, FnMut<void()> cancelledCallback)
     : _confirmText(confirmText)
     , _cancelText(cancelText)
     , _confirmStyle(st::defaultBoxButton)
@@ -99,8 +100,7 @@ ConfirmBox::ConfirmBox(QWidget *, const QString &text, const QString &confirmTex
 	init(text);
 }
 
-ConfirmBox::ConfirmBox(const InformBoxTag &, const QString &text, const QString &doneText,
-                       base::lambda<void()> closedCallback)
+ConfirmBox::ConfirmBox(const InformBoxTag &, const QString &text, const QString &doneText, Fn<void()> closedCallback)
     : _confirmText(doneText)
     , _confirmStyle(st::defaultBoxButton)
     , _informative(true)
@@ -110,7 +110,7 @@ ConfirmBox::ConfirmBox(const InformBoxTag &, const QString &text, const QString 
 	init(text);
 }
 
-base::lambda_once<void()> ConfirmBox::generateInformCallback(base::lambda<void()> closedCallback) {
+FnMut<void()> ConfirmBox::generateInformCallback(Fn<void()> closedCallback) {
 	return base::lambda_guarded(this, [this, closedCallback] {
 		closeBox();
 		if (closedCallback) {
@@ -222,10 +222,10 @@ void ConfirmBox::paintEvent(QPaintEvent *e) {
 	_text.drawLeftElided(p, st::boxPadding.left(), st::boxPadding.top(), _textWidth, width(), 16, style::al_left);
 }
 
-InformBox::InformBox(QWidget *, const QString &text, base::lambda<void()> closedCallback)
+InformBox::InformBox(QWidget *, const QString &text, Fn<void()> closedCallback)
     : ConfirmBox(ConfirmBox::InformBoxTag(), text, lang(lng_box_ok), std::move(closedCallback)) {}
 
-InformBox::InformBox(QWidget *, const QString &text, const QString &doneText, base::lambda<void()> closedCallback)
+InformBox::InformBox(QWidget *, const QString &text, const QString &doneText, Fn<void()> closedCallback)
     : ConfirmBox(ConfirmBox::InformBoxTag(), text, doneText, std::move(closedCallback)) {}
 
 MaxInviteBox::MaxInviteBox(QWidget *, not_null<ChannelData *> channel)
@@ -389,21 +389,30 @@ void ConvertToSupergroupBox::paintEvent(QPaintEvent *e) {
 PinMessageBox::PinMessageBox(QWidget *, ChannelData *channel, MsgId msgId)
     : _channel(channel)
     , _msgId(msgId)
-    , _text(this, lang(lng_pinned_pin_sure), Ui::FlatLabel::InitType::Simple, st::boxLabel)
-    , _notify(this, lang(lng_pinned_notify), true, st::defaultBoxCheckbox) {}
+    , _text(this, lang(lng_pinned_pin_sure), Ui::FlatLabel::InitType::Simple, st::boxLabel) {}
 
 void PinMessageBox::prepare() {
+	if (_channel->isMegagroup()) {
+		_notify.create(this, lang(lng_pinned_notify), true, st::defaultBoxCheckbox);
+	}
+
+	auto height = st::boxPadding.top() + _text->height() + st::boxPadding.bottom();
+	if (_notify) {
+		height += st::boxMediumSkip + _notify->heightNoMargins();
+	}
+
 	addButton(langFactory(lng_pinned_pin), [this] { pinMessage(); });
 	addButton(langFactory(lng_cancel), [this] { closeBox(); });
 
-	setDimensions(st::boxWidth, st::boxPadding.top() + _text->height() + st::boxMediumSkip +
-	                                _notify->heightNoMargins() + st::boxPadding.bottom());
+	setDimensions(st::boxWidth, height);
 }
 
 void PinMessageBox::resizeEvent(QResizeEvent *e) {
 	BoxContent::resizeEvent(e);
 	_text->moveToLeft(st::boxPadding.left(), st::boxPadding.top());
-	_notify->moveToLeft(st::boxPadding.left(), _text->y() + _text->height() + st::boxMediumSkip);
+	if (_notify) {
+		_notify->moveToLeft(st::boxPadding.left(), _text->y() + _text->height() + st::boxMediumSkip);
+	}
 }
 
 void PinMessageBox::keyPressEvent(QKeyEvent *e) {
@@ -418,7 +427,7 @@ void PinMessageBox::pinMessage() {
 	if (_requestId) return;
 
 	auto flags = MTPchannels_UpdatePinnedMessage::Flags(0);
-	if (!_notify->checked()) {
+	if (_notify && !_notify->checked()) {
 		flags |= MTPchannels_UpdatePinnedMessage::Flag::f_silent;
 	}
 	_requestId = MTP::send(MTPchannels_UpdatePinnedMessage(MTP_flags(flags), _channel->inputChannel, MTP_int(_msgId)),
@@ -636,7 +645,7 @@ ConfirmInviteBox::ConfirmInviteBox(QWidget *, const QString &title, bool isChann
 }
 
 void ConfirmInviteBox::prepare() {
-	addButton(langFactory(lng_group_invite_join), [this] {
+	addButton(langFactory(lng_group_invite_join), [] {
 		if (auto main = App::main()) {
 			main->onInviteImport();
 		}

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/calendar_box.h"
 
 #include "lang/lang_keys.h"
@@ -204,7 +206,7 @@ public:
 		return st::calendarPadding.top() + innerHeight + st::calendarPadding.bottom();
 	}
 
-	void setDateChosenCallback(base::lambda<void(QDate)> callback) {
+	void setDateChosenCallback(Fn<void(QDate)> callback) {
 		_dateChosenCallback = std::move(callback);
 	}
 
@@ -230,7 +232,7 @@ private:
 
 	std::map<int, std::unique_ptr<Ui::RippleAnimation>> _ripples;
 
-	base::lambda<void(QDate)> _dateChosenCallback;
+	Fn<void(QDate)> _dateChosenCallback;
 
 	static constexpr auto kEmptySelection = -kDaysInWeek;
 	int _selected = kEmptySelection;
@@ -438,7 +440,7 @@ void CalendarBox::Title::paintEvent(QPaintEvent *e) {
 	               _textWidth);
 }
 
-CalendarBox::CalendarBox(QWidget *, QDate month, QDate highlighted, base::lambda<void(QDate date)> callback)
+CalendarBox::CalendarBox(QWidget *, QDate month, QDate highlighted, Fn<void(QDate date)> callback)
     : _context(std::make_unique<Context>(month, highlighted))
     , _inner(this, _context.get())
     , _title(this, _context.get())

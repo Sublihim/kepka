@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "ui/widgets/buttons.h"
 
 #include "app.h"
@@ -195,9 +197,9 @@ void FlatButton::paintEvent(QPaintEvent *e) {
 
 class RoundButton::Numbers {
 public:
-	Numbers(const style::RoundButton &st, base::lambda<void()> animationCallback);
+	Numbers(const style::RoundButton &st, Fn<void()> animationCallback);
 
-	void setWidthChangedCallback(base::lambda<void()> callback) {
+	void setWidthChangedCallback(Fn<void()> callback) {
 		_widthChangedCallback = std::move(callback);
 	}
 	void setText(const QString &text, int value);
@@ -233,11 +235,11 @@ private:
 	int _value = 0;
 	bool _growing = false;
 
-	base::lambda<void()> _animationCallback;
-	base::lambda<void()> _widthChangedCallback;
+	Fn<void()> _animationCallback;
+	Fn<void()> _widthChangedCallback;
 };
 
-RoundButton::Numbers::Numbers(const style::RoundButton &st, base::lambda<void()> animationCallback)
+RoundButton::Numbers::Numbers(const style::RoundButton &st, Fn<void()> animationCallback)
     : _st(st)
     , _animationCallback(std::move(animationCallback)) {
 	for (auto ch = '0'; ch != '9'; ++ch) {
@@ -354,7 +356,7 @@ void RoundButton::Numbers::paint(Painter &p, int x, int y, int outerWidth) {
 	p.setOpacity(1.);
 }
 
-RoundButton::RoundButton(QWidget *parent, base::lambda<QString()> textFactory, const style::RoundButton &st)
+RoundButton::RoundButton(QWidget *parent, Fn<QString()> textFactory, const style::RoundButton &st)
     : RippleButton(parent, st.ripple)
     , _textFactory(std::move(textFactory))
     , _st(st) {
@@ -367,7 +369,7 @@ void RoundButton::setTextTransform(TextTransform transform) {
 	refreshText();
 }
 
-void RoundButton::setText(base::lambda<QString()> textFactory) {
+void RoundButton::setText(Fn<QString()> textFactory) {
 	_textFactory = std::move(textFactory);
 	refreshText();
 }
@@ -384,7 +386,7 @@ void RoundButton::setNumbersText(const QString &numbersText, int numbers) {
 	refreshText();
 }
 
-void RoundButton::setWidthChangedCallback(base::lambda<void()> callback) {
+void RoundButton::setWidthChangedCallback(Fn<void()> callback) {
 	if (!_numbers) {
 		_numbers = std::make_unique<Numbers>(_st, [this] { numbersAnimationCallback(); });
 	}

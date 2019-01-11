@@ -1,27 +1,48 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include <cstddef> // std::max_align_t
 #include <memory>
+
+#ifndef CUSTOM_LAMBDA_WRAP
+
+#include "base/unique_function.h"
+#include <functional>
+
+namespace base {
+
+namespace lambda_internal {
+
+template <typename Lambda> struct lambda_call_type { using type = decltype(&Lambda::operator()); };
+
+} // namespace lambda_internal
+
+template <typename Lambda> using lambda_call_type_t = typename lambda_internal::lambda_call_type<Lambda>::type;
+
+} // namespace base
+
+#else // CUSTOM_LAMBDA_WRAP
 
 #ifndef Assert
 #define LambdaAssertDefined
@@ -63,9 +84,6 @@ template <typename Lambda> struct type_helper {
 
 template <typename Lambda> using lambda_type = typename lambda_internal::type_helper<std::decay_t<Lambda>>::type;
 
-template <typename Lambda>
-constexpr bool lambda_is_mutable = lambda_internal::type_helper<std::decay_t<Lambda>>::is_mutable;
-
 namespace lambda_internal {
 
 constexpr auto kFullStorageSize = 32U;
@@ -80,11 +98,11 @@ template <typename Lambda> constexpr bool is_large = (sizeof(std::decay_t<Lambda
 	Unexpected("base::lambda bad_construct_copy() called!");
 }
 
-template <typename Return, typename... Args>
-[[noreturn]] Return bad_const_call(const void *lambda, Args...) { Unexpected("base::lambda bad_const_call() called!"); }
+template <typename Return, typename... Args>[[noreturn]] Return bad_const_call(const void *lambda, Args...) {
+	Unexpected("base::lambda bad_const_call() called!");
+}
 
-template <typename Return, typename... Args>
-struct vtable_base {
+template <typename Return, typename... Args> struct vtable_base {
 	using construct_copy_other_type = void (*)(void *, const void *); // dst, src
 	using construct_move_other_type = void (*)(void *, void *); // dst, src
 	using const_call_type = Return (*)(const void *, Args...);
@@ -416,3 +434,5 @@ public:
 #ifdef LambdaUnexpectedDefined
 #undef Unexpected
 #endif // LambdaUnexpectedDefined
+
+#endif // CUSTOM_LAMBDA_WRAP

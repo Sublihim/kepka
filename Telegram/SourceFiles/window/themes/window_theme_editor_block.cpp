@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "window/themes/window_theme_editor_block.h"
 
 #include "boxes/edit_color_box.h"
@@ -149,7 +151,7 @@ void EditorBlock::Row::fillValueString() {
 			_valueString.append('a' + (code - 10));
 		}
 	};
-	auto addCode = [this, addHex](int code) {
+	auto addCode = [addHex](int code) {
 		addHex(code / 16);
 		addHex(code % 16);
 	};
@@ -468,7 +470,7 @@ template <typename Callback> void EditorBlock::enumerateRowsFrom(int top, Callba
 int EditorBlock::resizeGetHeight(int newWidth) {
 	auto result = 0;
 	auto descriptionWidth = newWidth - st::themeEditorMargin.left() - st::themeEditorMargin.right();
-	enumerateRows([this, &result, descriptionWidth](Row &row) {
+	enumerateRows([&result, descriptionWidth](Row &row) {
 		row.setTop(result);
 
 		auto height = row.height();
@@ -522,7 +524,7 @@ void EditorBlock::saveEditing(QColor value) {
 	auto &row = _data[_editing];
 	auto name = row.name();
 	if (_type == Type::New) {
-		auto removing = std::exchange(_editing, -1);
+		_editing = -1;
 		setSelected(-1);
 		setPressed(-1);
 

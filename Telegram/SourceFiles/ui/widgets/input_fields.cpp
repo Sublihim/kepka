@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "ui/widgets/input_fields.h"
 
 #include "app.h"
@@ -131,7 +133,7 @@ QString FlatTextarea::tagsMimeType() {
 	return qsl("application/x-td-field-tags");
 }
 
-FlatTextarea::FlatTextarea(QWidget *parent, const style::FlatTextarea &st, base::lambda<QString()> placeholderFactory,
+FlatTextarea::FlatTextarea(QWidget *parent, const style::FlatTextarea &st, Fn<QString()> placeholderFactory,
                            const QString &v, const TagList &tags)
     : TWidgetHelper<QTextEdit>(parent)
     , _placeholderFactory(std::move(placeholderFactory))
@@ -302,7 +304,7 @@ void FlatTextarea::touchEvent(QTouchEvent *e) {
 	case QEvent::TouchEnd:
 		if (!_touchPress) return;
 		if (!_touchMove && window()) {
-			QPoint mapped(mapFromGlobal(_touchStart)), winMapped(window()->mapFromGlobal(_touchStart));
+			QPoint mapped(mapFromGlobal(_touchStart));
 
 			if (_touchRightButton) {
 				QContextMenuEvent contextEvent(QContextMenuEvent::Mouse, mapped, _touchStart);
@@ -1328,7 +1330,7 @@ void FlatTextarea::onRedoAvailable(bool avail) {
 	if (App::wnd()) App::wnd()->updateGlobalMenu();
 }
 
-void FlatTextarea::setPlaceholder(base::lambda<QString()> placeholderFactory, int afterSymbols) {
+void FlatTextarea::setPlaceholder(Fn<QString()> placeholderFactory, int afterSymbols) {
 	_placeholderFactory = std::move(placeholderFactory);
 	if (_placeholderAfterSymbols != afterSymbols) {
 		_placeholderAfterSymbols = afterSymbols;
@@ -1482,8 +1484,7 @@ void FlatTextarea::contextMenuEvent(QContextMenuEvent *e) {
 	}
 }
 
-FlatInput::FlatInput(QWidget *parent, const style::FlatInput &st, base::lambda<QString()> placeholderFactory,
-                     const QString &v)
+FlatInput::FlatInput(QWidget *parent, const style::FlatInput &st, Fn<QString()> placeholderFactory, const QString &v)
     : TWidgetHelper<QLineEdit>(v, parent)
     , _oldtext(v)
     , _placeholderFactory(std::move(placeholderFactory))
@@ -1566,7 +1567,7 @@ void FlatInput::touchEvent(QTouchEvent *e) {
 	case QEvent::TouchEnd:
 		if (!_touchPress) return;
 		if (!_touchMove && window()) {
-			QPoint mapped(mapFromGlobal(_touchStart)), winMapped(window()->mapFromGlobal(_touchStart));
+			QPoint mapped(mapFromGlobal(_touchStart));
 
 			if (_touchRightButton) {
 				QContextMenuEvent contextEvent(QContextMenuEvent::Mouse, mapped, _touchStart);
@@ -1658,7 +1659,7 @@ void FlatInput::resizeEvent(QResizeEvent *e) {
 	return QLineEdit::resizeEvent(e);
 }
 
-void FlatInput::setPlaceholder(base::lambda<QString()> placeholderFactory) {
+void FlatInput::setPlaceholder(Fn<QString()> placeholderFactory) {
 	_placeholderFactory = std::move(placeholderFactory);
 	refreshPlaceholder();
 }
@@ -1772,8 +1773,7 @@ void FlatInput::onTextChange(const QString &text) {
 	if (App::wnd()) App::wnd()->updateGlobalMenu();
 }
 
-InputArea::InputArea(QWidget *parent, const style::InputField &st, base::lambda<QString()> placeholderFactory,
-                     const QString &val)
+InputArea::InputArea(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory, const QString &val)
     : TWidget(parent)
     , _st(st)
     , _inner(this)
@@ -1903,8 +1903,7 @@ void InputArea::touchEvent(QTouchEvent *e) {
 	case QEvent::TouchEnd:
 		if (!_touchPress) return;
 		if (!_touchMove && window()) {
-			Qt::MouseButton btn(_touchRightButton ? Qt::RightButton : Qt::LeftButton);
-			QPoint mapped(mapFromGlobal(_touchStart)), winMapped(window()->mapFromGlobal(_touchStart));
+			QPoint mapped(mapFromGlobal(_touchStart));
 
 			if (_touchRightButton) {
 				QContextMenuEvent contextEvent(QContextMenuEvent::Mouse, mapped, _touchStart);
@@ -2522,7 +2521,7 @@ void InputArea::refreshPlaceholder() {
 	update();
 }
 
-void InputArea::setPlaceholder(base::lambda<QString()> placeholderFactory) {
+void InputArea::setPlaceholder(Fn<QString()> placeholderFactory) {
 	_placeholderFactory = std::move(placeholderFactory);
 	refreshPlaceholder();
 }
@@ -2542,7 +2541,7 @@ void InputArea::setErrorShown(bool error) {
 	}
 }
 
-InputField::InputField(QWidget *parent, const style::InputField &st, base::lambda<QString()> placeholderFactory,
+InputField::InputField(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory,
                        const QString &val)
     : TWidget(parent)
     , _st(st)
@@ -2649,8 +2648,7 @@ void InputField::touchEvent(QTouchEvent *e) {
 	case QEvent::TouchEnd:
 		if (!_touchPress) return;
 		if (!_touchMove && window()) {
-			Qt::MouseButton btn(_touchRightButton ? Qt::RightButton : Qt::LeftButton);
-			QPoint mapped(mapFromGlobal(_touchStart)), winMapped(window()->mapFromGlobal(_touchStart));
+			QPoint mapped(mapFromGlobal(_touchStart));
 
 			if (_touchRightButton) {
 				QContextMenuEvent contextEvent(QContextMenuEvent::Mouse, mapped, _touchStart);
@@ -3306,7 +3304,7 @@ void InputField::refreshPlaceholder() {
 	update();
 }
 
-void InputField::setPlaceholder(base::lambda<QString()> placeholderFactory) {
+void InputField::setPlaceholder(Fn<QString()> placeholderFactory) {
 	_placeholderFactory = std::move(placeholderFactory);
 	refreshPlaceholder();
 }
@@ -3326,8 +3324,8 @@ void InputField::setErrorShown(bool error) {
 	}
 }
 
-MaskedInputField::MaskedInputField(QWidget *parent, const style::InputField &st,
-                                   base::lambda<QString()> placeholderFactory, const QString &val)
+MaskedInputField::MaskedInputField(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory,
+                                   const QString &val)
     : TWidgetHelper<QLineEdit>(val, parent)
     , _st(st)
     , _oldtext(val)
@@ -3439,8 +3437,7 @@ void MaskedInputField::touchEvent(QTouchEvent *e) {
 	case QEvent::TouchEnd:
 		if (!_touchPress) return;
 		if (!_touchMove && window()) {
-			Qt::MouseButton btn(_touchRightButton ? Qt::RightButton : Qt::LeftButton);
-			QPoint mapped(mapFromGlobal(_touchStart)), winMapped(window()->mapFromGlobal(_touchStart));
+			QPoint mapped(mapFromGlobal(_touchStart));
 
 			if (_touchRightButton) {
 				QContextMenuEvent contextEvent(QContextMenuEvent::Mouse, mapped, _touchStart);
@@ -3603,7 +3600,7 @@ void MaskedInputField::refreshPlaceholder() {
 	update();
 }
 
-void MaskedInputField::setPlaceholder(base::lambda<QString()> placeholderFactory) {
+void MaskedInputField::setPlaceholder(Fn<QString()> placeholderFactory) {
 	_placeholderFactory = std::move(placeholderFactory);
 	refreshPlaceholder();
 }
@@ -3926,14 +3923,13 @@ void PhonePartInput::onChooseCode(const QString &code) {
 	startPlaceholderAnimation();
 }
 
-PasswordInput::PasswordInput(QWidget *parent, const style::InputField &st, base::lambda<QString()> placeholderFactory,
+PasswordInput::PasswordInput(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory,
                              const QString &val)
     : MaskedInputField(parent, st, std::move(placeholderFactory), val) {
 	setEchoMode(QLineEdit::Password);
 }
 
-PortInput::PortInput(QWidget *parent, const style::InputField &st, base::lambda<QString()> placeholderFactory,
-                     const QString &val)
+PortInput::PortInput(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory, const QString &val)
     : MaskedInputField(parent, st, std::move(placeholderFactory), val) {
 	if (!val.toInt() || val.toInt() > 65535) {
 		setText(QString());
@@ -3961,7 +3957,7 @@ void PortInput::correctValue(const QString &was, qint32 wasCursor, QString &now,
 	setCorrectedText(now, nowCursor, newText, newPos);
 }
 
-UsernameInput::UsernameInput(QWidget *parent, const style::InputField &st, base::lambda<QString()> placeholderFactory,
+UsernameInput::UsernameInput(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory,
                              const QString &val, bool isLink)
     : MaskedInputField(parent, st, std::move(placeholderFactory), val) {
 	setLinkPlaceholder(isLink ? Messenger::Instance().createInternalLink(QString()) : QString());
@@ -4007,7 +4003,7 @@ void UsernameInput::correctValue(const QString &was, qint32 wasCursor, QString &
 	setCorrectedText(now, nowCursor, now.mid(from, len), newPos);
 }
 
-PhoneInput::PhoneInput(QWidget *parent, const style::InputField &st, base::lambda<QString()> placeholderFactory,
+PhoneInput::PhoneInput(QWidget *parent, const style::InputField &st, Fn<QString()> placeholderFactory,
                        const QString &val)
     : MaskedInputField(parent, st, std::move(placeholderFactory), val) {
 	QString phone(val);

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "mainwidget.h"
 
 #include "apiwrap.h"
@@ -420,7 +422,7 @@ void MainWidget::updateFloatPlayerColumnCorner(QPoint center) {
 		auto right = rect.x() + rect.width() - (size.width() / 2);
 		auto top = rect.y() + (size.height() / 2);
 		auto bottom = rect.y() + rect.height() - (size.height() / 2);
-		auto checkCorner = [this, playerColumn, &min, &column, &corner](int distance, RectPart checked) {
+		auto checkCorner = [playerColumn, &min, &column, &corner](int distance, RectPart checked) {
 			if (min > distance) {
 				min = distance;
 				column = playerColumn;
@@ -952,28 +954,28 @@ void MainWidget::cancelUploadLayer() {
 
 void MainWidget::deletePhotoLayer(PhotoData *photo) {
 	if (!photo) return;
-	Ui::show(
-	    Box<ConfirmBox>(lang(lng_delete_photo_sure), lang(lng_box_delete), base::lambda_guarded(this, [this, photo] {
-		                    Ui::hideLayer();
+	Ui::show(Box<ConfirmBox>(lang(lng_delete_photo_sure), lang(lng_box_delete), base::lambda_guarded(this, [photo] {
+		                         Ui::hideLayer();
 
-		                    auto me = App::self();
-		                    if (!me) return;
+		                         auto me = App::self();
+		                         if (!me) return;
 
-		                    if (me->photoId == photo->id) {
-			                    Messenger::Instance().peerClearPhoto(me->id);
-		                    } else if (photo->peer && !photo->peer->isUser() && photo->peer->photoId == photo->id) {
-			                    Messenger::Instance().peerClearPhoto(photo->peer->id);
-		                    } else {
-			                    for (int i = 0, l = me->photos.size(); i != l; ++i) {
-				                    if (me->photos.at(i) == photo) {
-					                    me->photos.removeAt(i);
-					                    MTP::send(MTPphotos_DeletePhotos(MTP_vector<MTPInputPhoto>(
-					                        1, MTP_inputPhoto(MTP_long(photo->id), MTP_long(photo->access)))));
-					                    break;
-				                    }
-			                    }
-		                    }
-	                    })));
+		                         if (me->photoId == photo->id) {
+			                         Messenger::Instance().peerClearPhoto(me->id);
+		                         } else if (photo->peer && !photo->peer->isUser() &&
+		                                    photo->peer->photoId == photo->id) {
+			                         Messenger::Instance().peerClearPhoto(photo->peer->id);
+		                         } else {
+			                         for (int i = 0, l = me->photos.size(); i != l; ++i) {
+				                         if (me->photos.at(i) == photo) {
+					                         me->photos.removeAt(i);
+					                         MTP::send(MTPphotos_DeletePhotos(MTP_vector<MTPInputPhoto>(
+					                             1, MTP_inputPhoto(MTP_long(photo->id), MTP_long(photo->access)))));
+					                         break;
+				                         }
+			                         }
+		                         }
+	                         })));
 }
 
 void MainWidget::shareContactLayer(UserData *contact) {
@@ -1262,9 +1264,9 @@ bool MainWidget::kickParticipantFail(ChatData *chat, const RPCError &error) {
 }
 
 void MainWidget::checkPeerHistory(PeerData *peer) {
-	MTP::send(
-	    MTPmessages_GetHistory(peer->input, MTP_int(0), MTP_int(0), MTP_int(0), MTP_int(1), MTP_int(0), MTP_int(0)),
-	    rpcDone(&MainWidget::checkedHistory, peer));
+	MTP::send(MTPmessages_GetHistory(peer->input, MTP_int(0), MTP_int(0), MTP_int(0), MTP_int(1), MTP_int(0),
+	                                 MTP_int(0), MTP_int(0)),
+	          rpcDone(&MainWidget::checkedHistory, peer));
 }
 
 void MainWidget::checkedHistory(PeerData *peer, const MTPmessages_Messages &result) {
@@ -1357,7 +1359,6 @@ void MainWidget::onCacheBackground() {
 		result.setDevicePixelRatio(cRetinaFactor());
 		{
 			QPainter p(&result);
-			auto bottom = _willCacheFor.height();
 			auto w = bg.width() / cRetinaFactor();
 			auto h = bg.height() / cRetinaFactor();
 			auto sx = 0;
@@ -1652,7 +1653,6 @@ void MainWidget::itemEdited(HistoryItem *item) {
 bool MainWidget::overviewFailed(PeerData *peer, const RPCError &error, mtpRequestId req) {
 	if (MTP::isDefaultHandledError(error)) return false;
 
-	MediaOverviewType type = OverviewCount;
 	for (qint32 i = 0; i < OverviewCount; ++i) {
 		OverviewsPreload::iterator j = _overviewPreload[i].find(peer);
 		if (j != _overviewPreload[i].end() && j.value() == req) {
@@ -1985,14 +1985,14 @@ void MainWidget::documentLoadFailed(FileLoader *loader, bool started) {
 	auto document = App::document(documentId);
 	if (started) {
 		auto failedFileName = loader->fileName();
-		Ui::show(Box<ConfirmBox>(lang(lng_download_finish_failed),
-		                         base::lambda_guarded(this, [this, document, failedFileName] {
-			                         Ui::hideLayer();
-			                         if (document) document->save(failedFileName);
-		                         })));
+		Ui::show(
+		    Box<ConfirmBox>(lang(lng_download_finish_failed), base::lambda_guarded(this, [document, failedFileName] {
+			                    Ui::hideLayer();
+			                    if (document) document->save(failedFileName);
+		                    })));
 	} else {
 		Ui::show(Box<ConfirmBox>(lang(lng_download_path_failed), lang(lng_download_path_settings),
-		                         base::lambda_guarded(this, [this] {
+		                         base::lambda_guarded(this, [] {
 			                         Global::SetDownloadPath(QString());
 			                         Global::SetDownloadPathBookmark(QByteArray());
 			                         Ui::show(Box<DownloadPathBox>());
@@ -2265,8 +2265,7 @@ void MainWidget::scheduleViewIncrement(HistoryItem *item) {
 	j.value().insert(item->id, true);
 }
 
-void MainWidget::fillPeerMenu(PeerData *peer,
-                              base::lambda<QAction *(const QString &text, base::lambda<void()> handler)> callback,
+void MainWidget::fillPeerMenu(PeerData *peer, Fn<QAction *(const QString &text, Fn<void()> handler)> callback,
                               bool pinToggle) {
 	if (pinToggle) {
 		auto isPinned = false;
@@ -5374,10 +5373,7 @@ void MainWidget::feedUpdate(const MTPUpdate &update) {
 		auto &d = update.c_updateChannelPinnedMessage();
 
 		if (auto channel = App::channelLoaded(d.vchannel_id.v)) {
-			if (channel->isMegagroup()) {
-				channel->mgInfo->pinnedMsgId = d.vid.v;
-				Auth().api().fullPeerUpdated().notify(channel);
-			}
+			channel->setPinnedMessageId(d.vid.v);
 		}
 	} break;
 

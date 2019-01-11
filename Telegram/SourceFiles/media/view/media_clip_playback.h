@@ -1,26 +1,27 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
-#include "base/lambda.h"
 #include "ui/animation.h"
 #include "ui/widgets/continuous_sliders.h"
 
@@ -35,10 +36,10 @@ class Playback {
 public:
 	Playback();
 
-	void setValueChangedCallback(base::lambda<void(double)> callback) {
+	void setValueChangedCallback(Fn<void(double)> callback) {
 		_valueChanged = std::move(callback);
 	}
-	void setInLoadingStateChangedCallback(base::lambda<void(bool)> callback) {
+	void setInLoadingStateChangedCallback(Fn<void(bool)> callback) {
 		_inLoadingStateChanged = std::move(callback);
 	}
 	void setValue(double value, bool animated);
@@ -55,10 +56,10 @@ private:
 	// so it should be a BasicAnimation, not an Animation.
 	anim::value a_value;
 	BasicAnimation _a_value;
-	base::lambda<void(double)> _valueChanged;
+	Fn<void(double)> _valueChanged;
 
 	bool _inLoadingState = false;
-	base::lambda<void(bool)> _inLoadingStateChanged;
+	Fn<void(bool)> _inLoadingStateChanged;
 
 	qint64 _position = 0;
 	qint64 _length = 0;

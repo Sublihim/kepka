@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "intro/introwidget.h"
 
 #include "apiwrap.h"
@@ -59,7 +61,7 @@ Widget::Widget(QWidget *parent)
     , _back(this, object_ptr<Ui::IconButton>(this, st::introBackButton), st::introSlideDuration)
     , _settings(this, object_ptr<Ui::RoundButton>(this, langFactory(lng_menu_settings), st::defaultBoxButton),
                 st::introCoverDuration)
-    , _next(this, base::lambda<QString()>(), st::introNextButton) {
+    , _next(this, Fn<QString()>(), st::introNextButton) {
 	auto country = Platform::SystemCountry();
 	if (country.isEmpty()) {
 		country = str_const_toString(kDefaultCountry);
@@ -105,7 +107,7 @@ void Widget::createLanguageLink() {
 		_changeLanguage->show();
 		_changeLanguage->hideFast();
 		_changeLanguage->entity()->setClickedCallback(
-		    [this, languageId] { Lang::CurrentCloudManager().switchToLanguage(languageId); });
+		    [languageId] { Lang::CurrentCloudManager().switchToLanguage(languageId); });
 		_changeLanguage->toggleAnimated(!_resetAccount);
 		updateControlsGeometry();
 	};
@@ -118,7 +120,7 @@ void Widget::createLanguageLink() {
 	} else if (!suggestedId.isEmpty() && suggestedId != currentId) {
 		request(
 		    MTPlangpack_GetStrings(MTP_string(suggestedId), MTP_vector<MTPstring>(1, MTP_string("lng_switch_to_this"))))
-		    .done([this, suggestedId, createLink](const MTPVector<MTPLangPackString> &result) {
+		    .done([suggestedId, createLink](const MTPVector<MTPLangPackString> &result) {
 			    auto strings = Lang::Instance::ParseStrings(result);
 			    auto it = strings.find(lng_switch_to_this);
 			    if (it != strings.end()) {
@@ -484,7 +486,7 @@ void Widget::Step::updateLabelsPosition() {
 	}
 }
 
-void Widget::Step::setTitleText(base::lambda<QString()> richTitleTextFactory) {
+void Widget::Step::setTitleText(Fn<QString()> richTitleTextFactory) {
 	_titleTextFactory = std::move(richTitleTextFactory);
 	refreshTitle();
 	updateLabelsPosition();
@@ -494,7 +496,7 @@ void Widget::Step::refreshTitle() {
 	_title->setRichText(_titleTextFactory());
 }
 
-void Widget::Step::setDescriptionText(base::lambda<QString()> richDescriptionTextFactory) {
+void Widget::Step::setDescriptionText(Fn<QString()> richDescriptionTextFactory) {
 	_descriptionTextFactory = std::move(richDescriptionTextFactory);
 	refreshDescription();
 	updateLabelsPosition();
@@ -689,7 +691,7 @@ void Widget::Step::setErrorBelowLink(bool below) {
 	}
 }
 
-void Widget::Step::showError(base::lambda<QString()> textFactory) {
+void Widget::Step::showError(Fn<QString()> textFactory) {
 	_errorTextFactory = std::move(textFactory);
 	refreshError();
 	updateLabelsPosition();
@@ -778,11 +780,11 @@ void Widget::Step::showAnimated(Direction direction) {
 	}
 }
 
-void Widget::Step::setGoCallback(base::lambda<void(Step *step, Direction direction)> callback) {
+void Widget::Step::setGoCallback(Fn<void(Step *step, Direction direction)> callback) {
 	_goCallback = std::move(callback);
 }
 
-void Widget::Step::setShowResetCallback(base::lambda<void()> callback) {
+void Widget::Step::setShowResetCallback(Fn<void()> callback) {
 	_showResetCallback = std::move(callback);
 }
 

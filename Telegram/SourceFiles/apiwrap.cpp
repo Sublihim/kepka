@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "apiwrap.h"
 
 #include "application.h"
@@ -94,7 +96,7 @@ void ApiWrap::requestAppChangelogs() {
 
 void ApiWrap::addLocalChangelogs(int oldAppVersion) {
 	auto addedSome = false;
-	auto addLocalChangelog = [this, &addedSome](const QString &text) {
+	auto addLocalChangelog = [&addedSome](const QString &text) {
 		auto textWithEntities = TextWithEntities{text};
 		TextUtilities::ParseEntities(textWithEntities, TextParseLinks);
 		App::wnd()->serviceNotification(textWithEntities, MTP_messageMediaEmpty(), unixtime());
@@ -387,13 +389,12 @@ void ApiWrap::gotChatFull(PeerData *peer, const MTPmessages_ChatFull &result, mt
 			}
 			accumulate_max(h->outboxReadBefore, f.vread_outbox_max_id.v + 1);
 		}
+		if (f.has_pinned_msg_id()) {
+			channel->setPinnedMessageId(f.vpinned_msg_id.v);
+		} else {
+			channel->clearPinnedMessage();
+		}
 		if (channel->isMegagroup()) {
-			if (f.has_pinned_msg_id()) {
-				channel->mgInfo->pinnedMsgId = f.vpinned_msg_id.v;
-			} else {
-				channel->mgInfo->pinnedMsgId = 0;
-			}
-
 			auto stickersChanged = (canEditStickers != channel->canEditStickers());
 			auto stickerSet = (f.has_stickerset() ? &f.vstickerset.c_stickerSet() : nullptr);
 			auto newSetId = (stickerSet ? stickerSet->vid.v : 0);
@@ -543,7 +544,7 @@ void ApiWrap::requestPeers(const QList<PeerData *> &peers) {
 			channels.push_back((*i)->asChannel()->inputChannel);
 		}
 	}
-	auto handleChats = [this](const MTPmessages_Chats &result) {
+	auto handleChats = [](const MTPmessages_Chats &result) {
 		if (auto chats = Api::getChatsFromMessagesChats(result)) {
 			App::feedChats(*chats);
 		}
@@ -556,7 +557,7 @@ void ApiWrap::requestPeers(const QList<PeerData *> &peers) {
 	}
 	if (!users.isEmpty()) {
 		request(MTPusers_GetUsers(MTP_vector<MTPInputUser>(users)))
-		    .done([this](const MTPVector<MTPUser> &result) { App::feedUsers(result); })
+		    .done([](const MTPVector<MTPUser> &result) { App::feedUsers(result); })
 		    .send();
 	}
 }
@@ -584,7 +585,7 @@ void ApiWrap::requestLastParticipants(ChannelData *channel, bool fromStart) {
 	auto requestId =
 	    request(MTPchannels_GetParticipants(channel->inputChannel, MTP_channelParticipantsRecent(),
 	                                        MTP_int(fromStart ? 0 : channel->mgInfo->lastParticipants.size()),
-	                                        MTP_int(Global::ChatSizeMax())))
+	                                        MTP_int(Global::ChatSizeMax()), MTP_int(0)))
 	        .done([this, channel](const MTPchannels_ChannelParticipants &result, mtpRequestId requestId) {
 		        lastParticipantsDone(channel, result, requestId);
 	        })
@@ -605,7 +606,7 @@ void ApiWrap::requestBots(ChannelData *channel) {
 	}
 
 	auto requestId = request(MTPchannels_GetParticipants(channel->inputChannel, MTP_channelParticipantsBots(),
-	                                                     MTP_int(0), MTP_int(Global::ChatSizeMax())))
+	                                                     MTP_int(0), MTP_int(Global::ChatSizeMax()), MTP_int(0)))
 	                     .done([this, channel](const MTPchannels_ChannelParticipants &result, mtpRequestId requestId) {
 		                     lastParticipantsDone(channel, result, requestId);
 	                     })
@@ -1193,7 +1194,7 @@ void ApiWrap::handlePrivacyChange(mtpTypeId keyTypeId, const MTPVector<MTPPrivac
 		}
 
 		auto now = unixtime();
-		App::enumerateUsers([&userRules, contactsRule, everyoneRule, now](UserData *user) {
+		App::enumerateUsers([now](UserData *user) {
 			if (user->isSelf() || user->loadedStatus != PeerData::FullLoaded) {
 				return;
 			}
@@ -1461,7 +1462,7 @@ void ApiWrap::resolveWebPages() {
 }
 
 void ApiWrap::requestParticipantsCountDelayed(ChannelData *channel) {
-	_participantsCountRequestTimer.call(kReloadChannelMembersTimeout, [this, channel] { channel->updateFullForced(); });
+	_participantsCountRequestTimer.call(kReloadChannelMembersTimeout, [channel] { channel->updateFullForced(); });
 }
 
 void ApiWrap::gotWebPages(ChannelData *channel, const MTPmessages_Messages &msgs, mtpRequestId req) {
@@ -1588,7 +1589,7 @@ void ApiWrap::requestStickers(TimeId now) {
 	};
 	_stickersUpdateRequest = request(MTPmessages_GetAllStickers(MTP_int(Local::countStickersHash(true))))
 	                             .done(onDone)
-	                             .fail([this, onDone](const RPCError &error) {
+	                             .fail([onDone](const RPCError &error) {
 		                             LOG(("App Fail: Failed to get stickers!"));
 		                             onDone(MTP_messages_allStickersNotModified());
 	                             })
@@ -1620,7 +1621,7 @@ void ApiWrap::requestRecentStickers(TimeId now) {
 	_recentStickersUpdateRequest =
 	    request(MTPmessages_GetRecentStickers(MTP_flags(0), MTP_int(Local::countRecentStickersHash())))
 	        .done(onDone)
-	        .fail([this, onDone](const RPCError &error) {
+	        .fail([onDone](const RPCError &error) {
 		        LOG(("App Fail: Failed to get recent stickers!"));
 		        onDone(MTP_messages_recentStickersNotModified());
 	        })
@@ -1651,7 +1652,7 @@ void ApiWrap::requestFavedStickers(TimeId now) {
 	};
 	_favedStickersUpdateRequest = request(MTPmessages_GetFavedStickers(MTP_int(Local::countFavedStickersHash())))
 	                                  .done(onDone)
-	                                  .fail([this, onDone](const RPCError &error) {
+	                                  .fail([onDone](const RPCError &error) {
 		                                  LOG(("App Fail: Failed to get faved stickers!"));
 		                                  onDone(MTP_messages_favedStickersNotModified());
 	                                  })
@@ -1683,7 +1684,7 @@ void ApiWrap::requestFeaturedStickers(TimeId now) {
 	_featuredStickersUpdateRequest =
 	    request(MTPmessages_GetFeaturedStickers(MTP_int(Local::countFeaturedStickersHash())))
 	        .done(onDone)
-	        .fail([this, onDone](const RPCError &error) {
+	        .fail([onDone](const RPCError &error) {
 		        LOG(("App Fail: Failed to get featured stickers!"));
 		        onDone(MTP_messages_featuredStickersNotModified());
 	        })
@@ -1713,7 +1714,7 @@ void ApiWrap::requestSavedGifs(TimeId now) {
 	};
 	_savedGifsUpdateRequest = request(MTPmessages_GetSavedGifs(MTP_int(Local::countSavedGifsHash())))
 	                              .done(onDone)
-	                              .fail([this, onDone](const RPCError &error) {
+	                              .fail([onDone](const RPCError &error) {
 		                              LOG(("App Fail: Failed to get saved gifs!"));
 		                              onDone(MTP_messages_savedGifsNotModified());
 	                              })
@@ -1858,7 +1859,7 @@ void ApiWrap::jumpToDate(not_null<PeerData *> peer, const QDate &date) {
 	auto add_offset = -1;
 	auto limit = 1;
 	request(MTPmessages_GetHistory(peer->input, MTP_int(0), MTP_int(offset_date), MTP_int(add_offset), MTP_int(limit),
-	                               MTP_int(0), MTP_int(0)))
+	                               MTP_int(0), MTP_int(0), MTP_int(0)))
 	    .done([peer](const MTPmessages_Messages &result) {
 		    auto getMessagesList = [&result, peer]() -> const QVector<MTPMessage> * {
 			    auto handleMessages = [](auto &messages) {

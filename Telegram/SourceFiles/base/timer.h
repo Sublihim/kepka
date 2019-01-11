@@ -1,26 +1,27 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
-#include "base/lambda.h"
 #include "base/observer.h"
 
 using TimeMs = qint64;
@@ -29,14 +30,14 @@ namespace base {
 
 class Timer final : private QObject {
 public:
-	Timer(base::lambda<void()> callback = base::lambda<void()>());
+	Timer(Fn<void()> callback = Fn<void()>());
 
 	static Qt::TimerType DefaultType(TimeMs timeout) {
 		constexpr auto kThreshold = TimeMs(1000);
 		return (timeout > kThreshold) ? Qt::CoarseTimer : Qt::PreciseTimer;
 	}
 
-	void setCallback(base::lambda<void()> callback) {
+	void setCallback(Fn<void()> callback) {
 		_callback = std::move(callback);
 	}
 
@@ -86,7 +87,7 @@ private:
 		return static_cast<Repeat>(_repeat);
 	}
 
-	base::lambda<void()> _callback;
+	Fn<void()> _callback;
 	TimeMs _next = 0;
 	int _timeout = 0;
 	int _timerId = 0;
@@ -98,18 +99,18 @@ private:
 
 class DelayedCallTimer final : private QObject {
 public:
-	int call(TimeMs timeout, lambda_once<void()> callback) {
+	int call(TimeMs timeout, FnMut<void()> callback) {
 		return call(timeout, std::move(callback), Timer::DefaultType(timeout));
 	}
 
-	int call(TimeMs timeout, lambda_once<void()> callback, Qt::TimerType type);
+	int call(TimeMs timeout, FnMut<void()> callback, Qt::TimerType type);
 	void cancel(int callId);
 
 protected:
 	void timerEvent(QTimerEvent *e) override;
 
 private:
-	std::map<int, lambda_once<void()>> _callbacks; // Better to use flatmap.
+	std::map<int, FnMut<void()>> _callbacks; // Better to use flatmap.
 };
 
 } // namespace base

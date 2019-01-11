@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "codegen/lang/generator.h"
 
 #include <QtCore/QDir>
@@ -200,8 +202,20 @@ QString GetOriginalValue(LangKey key);\n\
 bool Generator::writeSource() {
 	source_ = std::make_unique<common::CppFile>(basePath_ + ".cpp", project_);
 
+	source_->include("map", true);
+	source_->include("string", true);
 	source_->include("lang/lang_keys.h").pushNamespace("Lang").pushNamespace().stream() << "\
-const char *KeyNames[kLangKeysCount] = {\n\
+const std::map<std::string, LangKey> KeyMap = {\n\
+\n";
+	for (auto &entry : langpack_.entries) {
+		source_->stream() << "{\"" << entry.key << "\"," << getFullKey(entry) << "},\n";
+	}
+	source_->stream() << "\
+\n\
+};\n\
+\n\
+const std::array<std::string, "
+	                  << langpack_.entries.size() << "> KeyNames = {\n\
 \n";
 	for (auto &entry : langpack_.entries) {
 		source_->stream() << "\"" << entry.key << "\",\n";
@@ -251,54 +265,34 @@ int Offsets[] = {";
 	}
 	writeOffset();
 	source_->stream() << " };\n";
+
+	source_->stream() << "\
+const std::map<std::string, ushort> TagMap = {\n\
+\n";
+
+	for (auto &tag : langpack_.tags) {
+		source_->stream() << "{\"" << tag.tag << "\","
+		                  << "lt_" << tag.tag << "},\n";
+	}
+	source_->stream() << "\
+\n\
+};\n";
 	source_->popNamespace().stream() << "\
 \n\
 const char *GetKeyName(LangKey key) {\n\
-	return (key < 0 || key >= kLangKeysCount) ? \"\" : KeyNames[key];\n\
+	return (key < 0 || key >= kLangKeysCount) ? \"\" : KeyNames[key].c_str();\n\
 }\n\
 \n\
 ushort GetTagIndex(QLatin1String tag) {\n\
-	auto size = tag.size();\n\
-	auto data = tag.data();\n";
-
-	auto tagsSet = std::set<QString, std::greater<QString>>();
-	for (auto &tag : langpack_.tags) {
-		tagsSet.insert(tag.tag);
-	}
-
-	writeSetSearch(tagsSet, [](const QString &tag) { return "lt_" + tag; }, "kTagsCount");
+	auto data = tag.data();\n\
+    return TagMap.find(data) != TagMap.end() ? TagMap.at(data) : kTagsCount;\n";
 
 	source_->stream() << "\
 }\n\
 \n\
 LangKey GetKeyIndex(QLatin1String key) {\n\
-	auto size = key.size();\n\
-	auto data = key.data();\n";
-
-	auto taggedKeys = std::map<QString, QString>();
-	auto keysSet = std::set<QString, std::greater<QString>>();
-	for (auto &entry : langpack_.entries) {
-		if (!entry.keyBase.isEmpty()) {
-			for (auto i = 0; i != kPluralPartCount; ++i) {
-				auto keyName = entry.keyBase + '#' + kPluralParts[i];
-				taggedKeys.emplace(keyName, ComputePluralKey(entry.keyBase, i));
-				keysSet.insert(keyName);
-			}
-		} else {
-			auto full = getFullKey(entry);
-			if (full != entry.key) {
-				taggedKeys.emplace(entry.key, full);
-			}
-			keysSet.insert(entry.key);
-		}
-	}
-
-	writeSetSearch(keysSet,
-	               [&taggedKeys](const QString &key) {
-		               auto it = taggedKeys.find(key);
-		               return (it != taggedKeys.end()) ? it->second : key;
-	               },
-	               "kLangKeysCount");
+	auto data = key.data();\n\
+    return KeyMap.find(data) != KeyMap.end() ? KeyMap.at(data) : kLangKeysCount;\n";
 
 	source_->stream() << "\
 }\n\
@@ -352,151 +346,6 @@ QString GetOriginalValue(LangKey key) {\n\
 \n";
 
 	return source_->finalize();
-}
-
-template <typename ComputeResult>
-void Generator::writeSetSearch(const std::set<QString, std::greater<QString>> &set, ComputeResult computeResult,
-                               const QString &invalidResult) {
-	auto tabs = [](int size) { return QString(size, '\t'); };
-
-	enum class UsedCheckType {
-		Switch,
-		If,
-		UpcomingIf,
-	};
-	auto checkTypes = QVector<UsedCheckType>();
-	auto checkLengthHistory = QVector<int>(1, 0);
-	auto chars = QString();
-	auto tabsUsed = 1;
-
-	// Returns true if at least one check was finished.
-	auto finishChecksTillKey = [this, &chars, &checkTypes, &checkLengthHistory, &tabsUsed, tabs](const QString &key) {
-		auto result = false;
-		while (!chars.isEmpty() && key.midRef(0, chars.size()) != chars) {
-			result = true;
-
-			auto wasType = checkTypes.back();
-			chars.resize(chars.size() - 1);
-			checkTypes.pop_back();
-			checkLengthHistory.pop_back();
-			if (wasType == UsedCheckType::Switch || wasType == UsedCheckType::If) {
-				--tabsUsed;
-				if (wasType == UsedCheckType::Switch) {
-					source_->stream() << tabs(tabsUsed) << "break;\n";
-				}
-				if ((!chars.isEmpty() && key.midRef(0, chars.size()) != chars) || key == chars) {
-					source_->stream() << tabs(tabsUsed) << "}\n";
-				}
-			}
-		}
-		return result;
-	};
-
-	// Check if we can use "if" for a check on "charIndex" in "it" (otherwise only "switch")
-	auto canUseIfForCheck = [](auto it, auto end, int charIndex) {
-		auto key = *it;
-		auto i = it;
-		auto keyStart = key.mid(0, charIndex);
-		for (++i; i != end; ++i) {
-			auto nextKey = *i;
-			if (nextKey.mid(0, charIndex) != keyStart) {
-				return true;
-			} else if (nextKey.size() > charIndex && nextKey[charIndex] != key[charIndex]) {
-				return false;
-			}
-		}
-		return true;
-	};
-
-	auto countMinimalLength = [](auto it, auto end, int charIndex) {
-		auto key = *it;
-		auto i = it;
-		auto keyStart = key.mid(0, charIndex);
-		auto result = key.size();
-		for (++i; i != end; ++i) {
-			auto nextKey = *i;
-			if (nextKey.mid(0, charIndex) != keyStart) {
-				break;
-			} else if (nextKey.size() > charIndex && result > nextKey.size()) {
-				result = nextKey.size();
-			}
-		}
-		return result;
-	};
-
-	for (auto i = set.begin(), e = set.end(); i != e; ++i) {
-		// If we use just "auto" here and "name" becomes mutable,
-		// the operator[] will return QCharRef instead of QChar,
-		// and "auto ch = name[index]" will behave like "auto &ch =",
-		// if you assign something to "ch" after that you'll change "name" (!)
-		const auto name = *i;
-
-		auto weContinueOldSwitch = finishChecksTillKey(name);
-		while (chars.size() != name.size()) {
-			auto checking = chars.size();
-			auto partialKey = name.mid(0, checking);
-
-			auto keyChar = name[checking];
-			auto usedIfForCheckCount = 0;
-			auto minimalLengthCheck = countMinimalLength(i, e, checking);
-			for (; checking + usedIfForCheckCount != name.size(); ++usedIfForCheckCount) {
-				if (!canUseIfForCheck(i, e, checking + usedIfForCheckCount) ||
-				    countMinimalLength(i, e, checking + usedIfForCheckCount) != minimalLengthCheck) {
-					break;
-				}
-			}
-			auto usedIfForCheck = !weContinueOldSwitch && (usedIfForCheckCount > 0);
-			auto checkLengthCondition = QString();
-			if (weContinueOldSwitch) {
-				weContinueOldSwitch = false;
-			} else {
-				checkLengthCondition = (minimalLengthCheck > checkLengthHistory.back()) ?
-				                           ("size >= " + QString::number(minimalLengthCheck)) :
-				                           QString();
-				if (!usedIfForCheck) {
-					source_->stream() << tabs(tabsUsed)
-					                  << (checkLengthCondition.isEmpty() ? QString() :
-					                                                       ("if (" + checkLengthCondition + ") "))
-					                  << "switch (data[" << checking << "]) {\n";
-				}
-			}
-			if (usedIfForCheck) {
-				auto conditions = QStringList();
-				if (usedIfForCheckCount > 1) {
-					conditions.push_back("!memcmp(data + " + QString::number(checking) + ", \"" +
-					                     name.mid(checking, usedIfForCheckCount) + "\", " +
-					                     QString::number(usedIfForCheckCount) + ")");
-				} else {
-					conditions.push_back("data[" + QString::number(checking) + "] == '" + keyChar + "'");
-				}
-				if (!checkLengthCondition.isEmpty()) {
-					conditions.push_front(checkLengthCondition);
-				}
-				source_->stream() << tabs(tabsUsed) << "if (" << conditions.join(" && ") << ") {\n";
-				checkTypes.push_back(UsedCheckType::If);
-				for (auto i = 1; i != usedIfForCheckCount; ++i) {
-					checkTypes.push_back(UsedCheckType::UpcomingIf);
-					chars.push_back(keyChar);
-					checkLengthHistory.push_back(std::max(minimalLengthCheck, checkLengthHistory.back()));
-					keyChar = name[checking + i];
-				}
-			} else {
-				source_->stream() << tabs(tabsUsed) << "case '" << keyChar << "':\n";
-				checkTypes.push_back(UsedCheckType::Switch);
-			}
-			++tabsUsed;
-			chars.push_back(keyChar);
-			checkLengthHistory.push_back(std::max(minimalLengthCheck, checkLengthHistory.back()));
-		}
-		source_->stream() << tabs(tabsUsed) << "return (size == " << chars.size() << ") ? " << computeResult(name)
-		                  << " : " << invalidResult << ";\n";
-	}
-	finishChecksTillKey(QString());
-
-	source_->stream() << "\
-\n\
-	return " << invalidResult
-	                  << ";\n";
 }
 
 QString Generator::getFullKey(const LangPack::Entry &entry) {

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "mtproto/sender.h"
@@ -95,8 +97,8 @@ public:
 			setFocus();
 		}
 
-		void setGoCallback(base::lambda<void(Step *step, Direction direction)> callback);
-		void setShowResetCallback(base::lambda<void()> callback);
+		void setGoCallback(Fn<void(Step *step, Direction direction)> callback);
+		void setShowResetCallback(Fn<void()> callback);
 
 		void prepareShowAnimated(Step *after);
 		void showAnimated(Direction direction);
@@ -117,9 +119,9 @@ public:
 
 		void setErrorCentered(bool centered);
 		void setErrorBelowLink(bool below);
-		void showError(base::lambda<QString()> textFactory);
+		void showError(Fn<QString()> textFactory);
 		void hideError() {
-			showError(base::lambda<QString()>());
+			showError(Fn<QString()>());
 		}
 
 		~Step();
@@ -128,8 +130,8 @@ public:
 		void paintEvent(QPaintEvent *e) override;
 		void resizeEvent(QResizeEvent *e) override;
 
-		void setTitleText(base::lambda<QString()> richTitleTextFactory);
-		void setDescriptionText(base::lambda<QString()> richDescriptionTextFactory);
+		void setTitleText(Fn<QString()> richTitleTextFactory);
+		void setDescriptionText(Fn<QString()> richDescriptionTextFactory);
 		bool paintAnimated(Painter &p, QRect clip);
 
 		void fillSentCodeData(const MTPauth_SentCodeType &type);
@@ -186,17 +188,17 @@ public:
 
 		Data *_data = nullptr;
 		bool _hasCover = false;
-		base::lambda<void(Step *step, Direction direction)> _goCallback;
-		base::lambda<void()> _showResetCallback;
+		Fn<void(Step *step, Direction direction)> _goCallback;
+		Fn<void()> _showResetCallback;
 
 		object_ptr<Ui::FlatLabel> _title;
-		base::lambda<QString()> _titleTextFactory;
+		Fn<QString()> _titleTextFactory;
 		object_ptr<Ui::WidgetFadeWrap<Ui::FlatLabel>> _description;
-		base::lambda<QString()> _descriptionTextFactory;
+		Fn<QString()> _descriptionTextFactory;
 
 		bool _errorCentered = false;
 		bool _errorBelowLink = false;
-		base::lambda<QString()> _errorTextFactory;
+		Fn<QString()> _errorTextFactory;
 		object_ptr<Ui::WidgetFadeWrap<Ui::FlatLabel>> _error = {nullptr};
 
 		Animation _a_show;

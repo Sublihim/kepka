@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/abstract_box.h"
 #include <algorithm>
 
@@ -32,13 +34,11 @@ Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 #include "ui/widgets/labels.h"
 #include "ui/widgets/scroll_area.h"
 
-QPointer<Ui::RoundButton> BoxContent::addButton(base::lambda<QString()> textFactory,
-                                                base::lambda<void()> clickCallback) {
+QPointer<Ui::RoundButton> BoxContent::addButton(Fn<QString()> textFactory, Fn<void()> clickCallback) {
 	return addButton(std::move(textFactory), std::move(clickCallback), st::defaultBoxButton);
 }
 
-QPointer<Ui::RoundButton> BoxContent::addLeftButton(base::lambda<QString()> textFactory,
-                                                    base::lambda<void()> clickCallback) {
+QPointer<Ui::RoundButton> BoxContent::addLeftButton(Fn<QString()> textFactory, Fn<void()> clickCallback) {
 	return getDelegate()->addLeftButton(std::move(textFactory), std::move(clickCallback), st::defaultBoxButton);
 }
 
@@ -279,7 +279,7 @@ void AbstractBox::parentResized() {
 	update();
 }
 
-void AbstractBox::setTitle(base::lambda<TextWithEntities()> titleFactory) {
+void AbstractBox::setTitle(Fn<TextWithEntities()> titleFactory) {
 	_titleFactory = std::move(titleFactory);
 	refreshTitle();
 }
@@ -300,7 +300,7 @@ void AbstractBox::refreshTitle() {
 	}
 }
 
-void AbstractBox::setAdditionalTitle(base::lambda<QString()> additionalFactory) {
+void AbstractBox::setAdditionalTitle(Fn<QString()> additionalFactory) {
 	_additionalTitleFactory = std::move(additionalFactory);
 	refreshAdditionalTitle();
 }
@@ -355,8 +355,8 @@ void AbstractBox::clearButtons() {
 	_leftButton.destroy();
 }
 
-QPointer<Ui::RoundButton> AbstractBox::addButton(base::lambda<QString()> textFactory,
-                                                 base::lambda<void()> clickCallback, const style::RoundButton &st) {
+QPointer<Ui::RoundButton> AbstractBox::addButton(Fn<QString()> textFactory, Fn<void()> clickCallback,
+                                                 const style::RoundButton &st) {
 	_buttons.push_back(object_ptr<Ui::RoundButton>(this, std::move(textFactory), st));
 	auto result = QPointer<Ui::RoundButton>(_buttons.back());
 	result->setClickedCallback(std::move(clickCallback));
@@ -365,8 +365,8 @@ QPointer<Ui::RoundButton> AbstractBox::addButton(base::lambda<QString()> textFac
 	return result;
 }
 
-QPointer<Ui::RoundButton> AbstractBox::addLeftButton(base::lambda<QString()> textFactory,
-                                                     base::lambda<void()> clickCallback, const style::RoundButton &st) {
+QPointer<Ui::RoundButton> AbstractBox::addLeftButton(Fn<QString()> textFactory, Fn<void()> clickCallback,
+                                                     const style::RoundButton &st) {
 	_leftButton = object_ptr<Ui::RoundButton>(this, std::move(textFactory), st);
 	auto result = QPointer<Ui::RoundButton>(_leftButton);
 	result->setClickedCallback(std::move(clickCallback));

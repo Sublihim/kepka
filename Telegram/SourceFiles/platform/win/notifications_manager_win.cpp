@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "platform/win/notifications_manager_win.h"
 
 #include "base/task_queue.h"
@@ -213,13 +215,13 @@ class ToastEventHandler : public Implements<DesktopToastActivatedEventHandler, D
                                             DesktopToastFailedEventHandler> {
 public:
 	// We keep a weak pointer to a member field of native notifications manager.
-	ToastEventHandler::ToastEventHandler(const std::shared_ptr<Manager *> &guarded, const PeerId &peer, MsgId msg)
+	ToastEventHandler(const std::shared_ptr<Manager *> &guarded, const PeerId &peer, MsgId msg)
 	    : _peerId(peer)
 	    , _msgId(msg)
 	    , _weak(guarded) {}
 	~ToastEventHandler() = default;
 
-	void performOnMainQueue(base::lambda_once<void(Manager *manager)> task) {
+	void performOnMainQueue(FnMut<void(Manager *manager)> task) {
 		base::TaskQueue::Main().Put([weak = _weak, task = std::move(task)]() mutable {
 			if (auto strong = weak.lock()) {
 				task(*strong);
@@ -608,8 +610,8 @@ void queryQuietHours() {
 		return;
 	}
 
-	LPTSTR lpKeyName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings";
-	LPTSTR lpValueName = L"NOC_GLOBAL_SETTING_TOASTS_ENABLED";
+	LPCWSTR lpKeyName = L"Software\\Microsoft\\Windows\\CurrentVersion\\Notifications\\Settings";
+	LPCWSTR lpValueName = L"NOC_GLOBAL_SETTING_TOASTS_ENABLED";
 	HKEY key;
 	auto result = RegOpenKeyEx(HKEY_CURRENT_USER, lpKeyName, 0, KEY_READ, &key);
 	if (result != ERROR_SUCCESS) {

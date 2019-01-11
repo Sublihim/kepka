@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "boxes/abstract_box.h"
@@ -70,7 +72,7 @@ public:
 	EditAdminBox(QWidget *, not_null<ChannelData *> channel, not_null<UserData *> user,
 	             const MTPChannelAdminRights &rights);
 
-	void setSaveCallback(base::lambda<void(MTPChannelAdminRights, MTPChannelAdminRights)> callback) {
+	void setSaveCallback(Fn<void(MTPChannelAdminRights, MTPChannelAdminRights)> callback) {
 		_saveCallback = std::move(callback);
 	}
 
@@ -91,7 +93,7 @@ private:
 
 	const MTPChannelAdminRights _oldRights;
 	std::vector<std::pair<Flag, Flag>> _dependencies;
-	base::lambda<void(MTPChannelAdminRights, MTPChannelAdminRights)> _saveCallback;
+	Fn<void(MTPChannelAdminRights, MTPChannelAdminRights)> _saveCallback;
 
 	std::map<Flags, QPointer<Ui::Checkbox>> _checkboxes;
 	QPointer<Ui::FlatLabel> _aboutAddAdmins;
@@ -105,7 +107,7 @@ public:
 	EditRestrictedBox(QWidget *, not_null<ChannelData *> channel, not_null<UserData *> user, bool hasAdminRights,
 	                  const MTPChannelBannedRights &rights);
 
-	void setSaveCallback(base::lambda<void(MTPChannelBannedRights, MTPChannelBannedRights)> callback) {
+	void setSaveCallback(Fn<void(MTPChannelBannedRights, MTPChannelBannedRights)> callback) {
 		_saveCallback = std::move(callback);
 	}
 
@@ -135,7 +137,7 @@ private:
 	const MTPChannelBannedRights _oldRights;
 	TimeId _until = 0;
 	std::vector<std::pair<Flag, Flag>> _dependencies;
-	base::lambda<void(MTPChannelBannedRights, MTPChannelBannedRights)> _saveCallback;
+	Fn<void(MTPChannelBannedRights, MTPChannelBannedRights)> _saveCallback;
 
 	std::map<Flags, QPointer<Ui::Checkbox>> _checkboxes;
 

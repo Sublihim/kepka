@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history.h"
 #include "apiwrap.h"
 #include "app.h"
@@ -906,6 +908,13 @@ HistoryItem *History::createItem(const MTPMessage &msg, bool applyServiceAction,
 				default: badMedia = MediaCheckResult::Unsupported; break;
 				}
 				break;
+			case mtpc_messageMediaGeoLive:
+				switch (m.vmedia.c_messageMediaGeoLive().vgeo.type()) {
+				case mtpc_geoPoint: break;
+				case mtpc_geoPointEmpty: badMedia = MediaCheckResult::Empty; break;
+				default: badMedia = MediaCheckResult::Unsupported; break;
+				}
+				break;
 			case mtpc_messageMediaPhoto: {
 				auto &photo = m.vmedia.c_messageMediaPhoto();
 				if (photo.has_ttl_seconds()) {
@@ -1112,9 +1121,10 @@ HistoryItem *History::createItem(const MTPMessage &msg, bool applyServiceAction,
 			} break;
 
 			case mtpc_messageActionPinMessage: {
-				if (m.has_reply_to_msg_id() && result && result->history()->peer->isMegagroup()) {
-					result->history()->peer->asChannel()->mgInfo->pinnedMsgId = m.vreply_to_msg_id.v;
-					Notify::peerUpdatedDelayed(result->history()->peer, Notify::PeerUpdate::Flag::ChannelPinnedChanged);
+				if (m.has_reply_to_msg_id() && result) {
+					if (auto channel = result->history()->peer->asChannel()) {
+						channel->setPinnedMessageId(m.vreply_to_msg_id.v);
+					}
 				}
 			} break;
 
@@ -1524,7 +1534,6 @@ void History::addOlderSlice(const QVector<MTPMessage> &slice) {
 		// If no items were added it means we've loaded everything old.
 		oldLoaded = true;
 	} else if (loadedAtBottom()) { // add photos to overview and authors to lastAuthors
-		bool channel = isChannel();
 		qint32 mask = 0;
 		QList<not_null<UserData *>> *lastAuthors = nullptr;
 		std::set<not_null<PeerData *>> *markupSenders = nullptr;
@@ -1532,12 +1541,10 @@ void History::addOlderSlice(const QVector<MTPMessage> &slice) {
 			lastAuthors = &peer->asChat()->lastAuthors;
 			markupSenders = &peer->asChat()->markupSenders;
 		} else if (peer->isMegagroup()) {
-			// We don't add users to mgInfo->lastParticipants here.
-			// We're scrolling back and we see messages from users that
-			// could be gone from the megagroup already. It is fine for
-			// chat->lastAuthors, because they're used only for field
-			// autocomplete, but this is bad for megagroups, because its
-			// lastParticipants are displayed in Profile as members list.
+			// We don't add users to mgInfo->lastParticipants here. We're scrolling back and we see messages from users
+			// that could be gone from the megagroup already. It is fine for chat->lastAuthors, because they're used
+			// only for field autocomplete, but this is bad for megagroups, because its lastParticipants are displayed
+			// in Profile as members list.
 			markupSenders = &peer->asChannel()->mgInfo->markupSenders;
 		}
 		for (auto i = block->items.size(); i > 0; --i) {
@@ -1624,7 +1631,7 @@ void History::addOlderSlice(const QVector<MTPMessage> &slice) {
 }
 
 void History::addNewerSlice(const QVector<MTPMessage> &slice) {
-	bool wasEmpty = isEmpty(), wasLoadedAtBottom = loadedAtBottom();
+	bool wasLoadedAtBottom = loadedAtBottom();
 
 	if (slice.isEmpty()) {
 		newLoaded = true;
@@ -1973,7 +1980,6 @@ HistoryBlock *History::finishBuildingFrontBlock() {
 	auto block = _buildingFrontBlock->block;
 	if (block) {
 		if (blocks.size() > 1) {
-			auto last = block->items.back(); // ... item, item, item, last ], [ first, item, item ...
 			auto first = blocks[1]->items.front();
 
 			// we've added a new front block, so previous item for
@@ -2249,8 +2255,8 @@ void History::clear(bool leaveItems) {
 		lastKeyboardInited = false;
 	} else {
 		setUnreadCount(0);
-		if (peer->isMegagroup()) {
-			peer->asChannel()->mgInfo->pinnedMsgId = 0;
+		if (auto channel = peer->asChannel()) {
+			channel->clearPinnedMessage();
 		}
 		clearLastKeyboard();
 	}

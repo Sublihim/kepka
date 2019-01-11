@@ -1,27 +1,28 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 
-#include "base/lambda.h"
 #include "base/object_ptr.h"
 #include "styles/style_widgets.h"
 #include "ui/animation.h"
@@ -42,10 +43,10 @@ public:
 	bool paint(Painter &p);
 	void refreshCache();
 
-	using FinishedCallback = base::lambda<void()>;
+	using FinishedCallback = Fn<void()>;
 	void setFinishedCallback(FinishedCallback &&callback);
 
-	using UpdatedCallback = base::lambda<void(double)>;
+	using UpdatedCallback = Fn<void(double)>;
 	void setUpdatedCallback(UpdatedCallback &&callback);
 
 	void show();
@@ -89,7 +90,7 @@ template <typename Widget> class WidgetFadeWrap;
 template <> class WidgetFadeWrap<TWidget> : public TWidget {
 public:
 	WidgetFadeWrap(QWidget *parent, object_ptr<TWidget> entity, int duration = st::widgetFadeDuration,
-	               base::lambda<void()> updateCallback = base::lambda<void()>(), bool scaled = false);
+	               Fn<void()> updateCallback = Fn<void()>(), bool scaled = false);
 
 	void showAnimated() {
 		toggleAnimated(true);
@@ -146,7 +147,7 @@ public:
 	bool animating() const {
 		return _animation.animating();
 	}
-	void setUpdateCallback(base::lambda<void()> callback) {
+	void setUpdateCallback(Fn<void()> callback) {
 		_updateCallback = std::move(callback);
 		installCallbacks();
 	}
@@ -160,7 +161,7 @@ private:
 
 	object_ptr<TWidget> _entity;
 	int _duration;
-	base::lambda<void()> _updateCallback;
+	Fn<void()> _updateCallback;
 
 	FadeAnimation _animation;
 };
@@ -168,7 +169,7 @@ private:
 template <typename Widget> class WidgetFadeWrap : public WidgetFadeWrap<TWidget> {
 public:
 	WidgetFadeWrap(QWidget *parent, object_ptr<Widget> entity, int duration = st::widgetFadeDuration,
-	               base::lambda<void()> updateCallback = base::lambda<void()>(), bool scaled = false)
+	               Fn<void()> updateCallback = Fn<void()>(), bool scaled = false)
 	    : WidgetFadeWrap<TWidget>(parent, std::move(entity), duration, std::move(updateCallback), scaled) {}
 	Widget *entity() {
 		return static_cast<Widget *>(WidgetFadeWrap<TWidget>::entity());
@@ -181,7 +182,7 @@ public:
 template <typename Widget> class WidgetScaledFadeWrap : public WidgetFadeWrap<Widget> {
 public:
 	WidgetScaledFadeWrap(QWidget *parent, object_ptr<Widget> entity, int duration = st::widgetFadeDuration,
-	                     base::lambda<void()> updateCallback = base::lambda<void()>())
+	                     Fn<void()> updateCallback = Fn<void()>())
 	    : WidgetFadeWrap<Widget>(parent, std::move(entity), duration, std::move(updateCallback), true) {}
 };
 

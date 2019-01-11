@@ -1,26 +1,27 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
-#include "base/lambda.h"
 #include "styles/style_widgets.h"
 
 #include "ui/twidget.h"
@@ -42,7 +43,7 @@ public:
 
 	QAction *addAction(const QString &text, const QObject *receiver, const char *member,
 	                   const style::icon *icon = nullptr, const style::icon *iconOver = nullptr);
-	QAction *addAction(const QString &text, base::lambda<void()> callback, const style::icon *icon = nullptr,
+	QAction *addAction(const QString &text, Fn<void()> callback, const style::icon *icon = nullptr,
 	                   const style::icon *iconOver = nullptr);
 	QAction *addSeparator();
 	void clearActions();
@@ -63,33 +64,33 @@ public:
 	using Actions = QList<QAction *>;
 	Actions &actions();
 
-	void setResizedCallback(base::lambda<void()> callback) {
+	void setResizedCallback(Fn<void()> callback) {
 		_resizedCallback = std::move(callback);
 	}
 
-	void setActivatedCallback(base::lambda<void(QAction *action, int actionTop, TriggeredSource source)> callback) {
+	void setActivatedCallback(Fn<void(QAction *action, int actionTop, TriggeredSource source)> callback) {
 		_activatedCallback = std::move(callback);
 	}
-	void setTriggeredCallback(base::lambda<void(QAction *action, int actionTop, TriggeredSource source)> callback) {
+	void setTriggeredCallback(Fn<void(QAction *action, int actionTop, TriggeredSource source)> callback) {
 		_triggeredCallback = std::move(callback);
 	}
 
-	void setKeyPressDelegate(base::lambda<bool(int key)> delegate) {
+	void setKeyPressDelegate(Fn<bool(int key)> delegate) {
 		_keyPressDelegate = std::move(delegate);
 	}
 	void handleKeyPress(int key);
 
-	void setMouseMoveDelegate(base::lambda<void(QPoint globalPosition)> delegate) {
+	void setMouseMoveDelegate(Fn<void(QPoint globalPosition)> delegate) {
 		_mouseMoveDelegate = std::move(delegate);
 	}
 	void handleMouseMove(QPoint globalPosition);
 
-	void setMousePressDelegate(base::lambda<void(QPoint globalPosition)> delegate) {
+	void setMousePressDelegate(Fn<void(QPoint globalPosition)> delegate) {
 		_mousePressDelegate = std::move(delegate);
 	}
 	void handleMousePress(QPoint globalPosition);
 
-	void setMouseReleaseDelegate(base::lambda<void(QPoint globalPosition)> delegate) {
+	void setMouseReleaseDelegate(Fn<void(QPoint globalPosition)> delegate) {
 		_mouseReleaseDelegate = std::move(delegate);
 	}
 	void handleMouseRelease(QPoint globalPosition);
@@ -143,13 +144,13 @@ private:
 
 	const style::Menu &_st;
 
-	base::lambda<void()> _resizedCallback;
-	base::lambda<void(QAction *action, int actionTop, TriggeredSource source)> _activatedCallback;
-	base::lambda<void(QAction *action, int actionTop, TriggeredSource source)> _triggeredCallback;
-	base::lambda<bool(int key)> _keyPressDelegate;
-	base::lambda<void(QPoint globalPosition)> _mouseMoveDelegate;
-	base::lambda<void(QPoint globalPosition)> _mousePressDelegate;
-	base::lambda<void(QPoint globalPosition)> _mouseReleaseDelegate;
+	Fn<void()> _resizedCallback;
+	Fn<void(QAction *action, int actionTop, TriggeredSource source)> _activatedCallback;
+	Fn<void(QAction *action, int actionTop, TriggeredSource source)> _triggeredCallback;
+	Fn<bool(int key)> _keyPressDelegate;
+	Fn<void(QPoint globalPosition)> _mouseMoveDelegate;
+	Fn<void(QPoint globalPosition)> _mousePressDelegate;
+	Fn<void(QPoint globalPosition)> _mouseReleaseDelegate;
 
 	QMenu *_wappedMenu = nullptr;
 	Actions _actions;

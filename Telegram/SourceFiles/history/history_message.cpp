@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history_message.h"
 
 #include "apiwrap.h"
@@ -266,7 +268,7 @@ void FastShareMessage(not_null<HistoryItem *> item) {
 		}
 		return false;
 	};
-	auto copyLinkCallback = canCopyLink ? base::lambda<void()>(std::move(copyCallback)) : base::lambda<void()>();
+	auto copyLinkCallback = canCopyLink ? Fn<void()>(std::move(copyCallback)) : Fn<void()>();
 	Ui::show(Box<ShareBox>(std::move(copyLinkCallback), std::move(submitCallback), std::move(filterCallback)));
 }
 
@@ -274,7 +276,7 @@ void HistoryInitMessages() {
 	initTextOptions();
 }
 
-base::lambda<void(ChannelData *, MsgId)> HistoryDependentItemCallback(const FullMsgId &msgId) {
+Fn<void(ChannelData *, MsgId)> HistoryDependentItemCallback(const FullMsgId &msgId) {
 	return [dependent = msgId](ChannelData *channel, MsgId msgId) {
 		if (auto item = App::histItemById(dependent)) {
 			item->updateDependencyItem();
@@ -711,7 +713,7 @@ HistoryMessage::HistoryMessage(not_null<History *> history, MsgId id, MTPDmessag
 
 	createComponents(config);
 
-	auto cloneMedia = [this, history, mediaType] {
+	auto cloneMedia = [history, mediaType] {
 		if (mediaType == MediaTypeWebPage) {
 			if (auto channel = history->peer->asChannel()) {
 				if (channel->restrictedRights().is_embed_links()) {
@@ -979,6 +981,12 @@ void HistoryMessage::initMedia(const MTPMessageMedia *media) {
 	} break;
 	case mtpc_messageMediaGeo: {
 		auto &point = media->c_messageMediaGeo().vgeo;
+		if (point.type() == mtpc_geoPoint) {
+			_media = std::make_unique<HistoryLocation>(this, LocationCoords(point.c_geoPoint()));
+		}
+	} break;
+	case mtpc_messageMediaGeoLive: {
+		auto &point = media->c_messageMediaGeoLive().vgeo;
 		if (point.type() == mtpc_geoPoint) {
 			_media = std::make_unique<HistoryLocation>(this, LocationCoords(point.c_geoPoint()));
 		}
@@ -1834,7 +1842,7 @@ void HistoryMessage::paintFromName(Painter &p, QRect &trect, bool selected) cons
 
 void HistoryMessage::paintForwardedInfo(Painter &p, QRect &trect, bool selected) const {
 	if (displayForwardedFrom()) {
-		style::font serviceFont(st::msgServiceFont), serviceName(st::msgServiceNameFont);
+		style::font serviceFont(st::msgServiceFont);
 
 		auto outbg = hasOutLayout();
 		p.setPen(selected ? (outbg ? st::msgOutServiceFgSelected : st::msgInServiceFgSelected) :
@@ -2174,7 +2182,6 @@ void HistoryMessage::updatePressed(QPoint point) {
 
 	if (drawBubble()) {
 		auto mediaDisplayed = _media && _media->isDisplayed();
-		auto top = marginTop();
 		auto trect = g.marginsAdded(-st::msgPadding);
 		if (mediaDisplayed && _media->isBubbleTop()) {
 			trect.setY(trect.y() - st::msgPadding.top());
@@ -2199,7 +2206,6 @@ void HistoryMessage::updatePressed(QPoint point) {
 			trect.setHeight(trect.height() + st::msgPadding.bottom());
 		}
 
-		auto needDateCheck = true;
 		if (mediaDisplayed) {
 			auto mediaAboveText = _media->isAboveMessage();
 			auto mediaHeight = _media->height();

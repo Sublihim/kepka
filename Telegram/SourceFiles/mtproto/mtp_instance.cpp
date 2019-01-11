@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "mtproto/mtp_instance.h"
 
 #include "apiwrap.h"
@@ -97,8 +99,8 @@ public:
 
 	void setUpdatesHandler(RPCDoneHandlerPtr onDone);
 	void setGlobalFailHandler(RPCFailHandlerPtr onFail);
-	void setStateChangedHandler(base::lambda<void(ShiftedDcId shiftedDcId, qint32 state)> handler);
-	void setSessionResetHandler(base::lambda<void(ShiftedDcId shiftedDcId)> handler);
+	void setStateChangedHandler(Fn<void(ShiftedDcId shiftedDcId, qint32 state)> handler);
+	void setSessionResetHandler(Fn<void(ShiftedDcId shiftedDcId)> handler);
 	void clearGlobalHandlers();
 
 	internal::Session *getSession(ShiftedDcId shiftedDcId);
@@ -185,8 +187,8 @@ private:
 	RPCCallbackClears _toClear;
 
 	RPCResponseHandler _globalHandler;
-	base::lambda<void(ShiftedDcId shiftedDcId, qint32 state)> _stateChangedHandler;
-	base::lambda<void(ShiftedDcId shiftedDcId)> _sessionResetHandler;
+	Fn<void(ShiftedDcId shiftedDcId, qint32 state)> _stateChangedHandler;
+	Fn<void(ShiftedDcId shiftedDcId)> _sessionResetHandler;
 
 	base::Timer _checkDelayedTimer;
 
@@ -974,7 +976,7 @@ bool Instance::Private::onErrorDefault(mtpRequestId requestId, const RPCError &e
 	auto &err(error.type());
 	auto code = error.code();
 	if (!isFloodError(error) && err != qstr("AUTH_KEY_UNREGISTERED")) {
-		int breakpoint = 0;
+		// int breakpoint = 0;
 	}
 	auto badGuestDc = (code == 400) && (err == qsl("FILE_ID_INVALID"));
 	QRegularExpressionMatch m;
@@ -1277,19 +1279,19 @@ void Instance::Private::setGlobalFailHandler(RPCFailHandlerPtr onFail) {
 	_globalHandler.onFail = onFail;
 }
 
-void Instance::Private::setStateChangedHandler(base::lambda<void(ShiftedDcId shiftedDcId, qint32 state)> handler) {
+void Instance::Private::setStateChangedHandler(Fn<void(ShiftedDcId shiftedDcId, qint32 state)> handler) {
 	_stateChangedHandler = std::move(handler);
 }
 
-void Instance::Private::setSessionResetHandler(base::lambda<void(ShiftedDcId shiftedDcId)> handler) {
+void Instance::Private::setSessionResetHandler(Fn<void(ShiftedDcId shiftedDcId)> handler) {
 	_sessionResetHandler = std::move(handler);
 }
 
 void Instance::Private::clearGlobalHandlers() {
 	setUpdatesHandler(RPCDoneHandlerPtr());
 	setGlobalFailHandler(RPCFailHandlerPtr());
-	setStateChangedHandler(base::lambda<void(ShiftedDcId, qint32)>());
-	setSessionResetHandler(base::lambda<void(ShiftedDcId)>());
+	setStateChangedHandler(Fn<void(ShiftedDcId, qint32)>());
+	setSessionResetHandler(Fn<void(ShiftedDcId)>());
 }
 
 void Instance::Private::prepareToDestroy() {
@@ -1424,11 +1426,11 @@ void Instance::setGlobalFailHandler(RPCFailHandlerPtr onFail) {
 	_private->setGlobalFailHandler(onFail);
 }
 
-void Instance::setStateChangedHandler(base::lambda<void(ShiftedDcId shiftedDcId, qint32 state)> handler) {
+void Instance::setStateChangedHandler(Fn<void(ShiftedDcId shiftedDcId, qint32 state)> handler) {
 	_private->setStateChangedHandler(std::move(handler));
 }
 
-void Instance::setSessionResetHandler(base::lambda<void(ShiftedDcId shiftedDcId)> handler) {
+void Instance::setSessionResetHandler(Fn<void(ShiftedDcId shiftedDcId)> handler) {
 	_private->setSessionResetHandler(std::move(handler));
 }
 

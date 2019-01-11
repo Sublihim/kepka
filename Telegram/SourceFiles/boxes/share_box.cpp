@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/share_box.h"
 
 #include "apiwrap.h"
@@ -513,7 +515,7 @@ void ShareBox::Inner::paintChat(Painter &p, TimeMs ms, Chat *chat, int index) {
 	chat->name.drawLeftElided(p, x + nameLeft, y + nameTop, nameWidth, outerWidth, 2, style::al_top, 0, -1, 0, true);
 }
 
-ShareBox::Inner::Chat::Chat(PeerData *peer, base::lambda<void()> updateCallback)
+ShareBox::Inner::Chat::Chat(PeerData *peer, Fn<void()> updateCallback)
     : peer(peer)
     , checkbox(st::sharePhotoCheckbox, updateCallback, PaintUserpicCallback(peer))
     , name(st::sharePhotoCheckbox.imageRadius * 2) {}
@@ -649,7 +651,7 @@ void ShareBox::Inner::peerUnselected(PeerData *peer) {
 	changePeerCheckState(chat, false, ChangeStateWay::SkipCallback);
 }
 
-void ShareBox::Inner::setPeerSelectedChangedCallback(base::lambda<void(PeerData *peer, bool selected)> callback) {
+void ShareBox::Inner::setPeerSelectedChangedCallback(Fn<void(PeerData *peer, bool selected)> callback) {
 	_peerSelectedChangedCallback = std::move(callback);
 }
 

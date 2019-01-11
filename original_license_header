@@ -18,14 +18,3 @@ to link the code of portions of this program with the OpenSSL library.
 Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
 Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 */
-#pragma once
-
-#include "utils.h"
-#include <cstdint>
-
-#define BETA_VERSION_MACRO (0ULL)
-
-constexpr int AppVersion = 1001023;
-constexpr str_const AppVersionStr = "1.1.23-procxx";
-constexpr bool AppAlphaVersion = false;
-constexpr quint64 AppBetaVersion = BETA_VERSION_MACRO;

@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "history/history_item.h"
 #include "auth_session.h"
 #include "history/history_media_types.h"
@@ -133,7 +135,6 @@ void ReplyKeyboard::updateMessageId() {
 void ReplyKeyboard::resize(int width, int height) {
 	_width = width;
 
-	auto markup = _item->Get<HistoryMessageReplyMarkup>();
 	double y = 0,
 	       buttonHeight = _rows.isEmpty() ? _st->buttonHeight() : (double(height + _st->buttonSkip()) / _rows.size());
 	for (auto &row : _rows) {
@@ -522,7 +523,6 @@ void HistoryMessageUnreadBar::paint(Painter &p, int y, int w) const {
 	p.setFont(st::historyUnreadBarFont);
 	p.setPen(st::historyUnreadBarFg);
 
-	int left = st::msgServiceMargin.left();
 	int maxwidth = w;
 	if (Adaptive::ChatWide()) {
 		maxwidth = std::min(maxwidth, qint32(st::msgMaxWidth + 2 * st::msgPhotoSkip + 2 * st::msgMargin.left()));
@@ -647,8 +647,10 @@ void HistoryItem::finishEditionToEmpty() {
 
 	_history->removeNotification(this);
 	if (history()->isChannel()) {
-		if (history()->peer->isMegagroup() && history()->peer->asChannel()->mgInfo->pinnedMsgId == id) {
-			history()->peer->asChannel()->mgInfo->pinnedMsgId = 0;
+		if (auto channel = history()->peer->asChannel()) {
+			if (channel->pinnedMessageId() == id) {
+				channel->clearPinnedMessage();
+			}
 		}
 	}
 	if (history()->lastKeyboardId == id) {
@@ -714,8 +716,10 @@ void HistoryItem::destroy() {
 		_history->removeNotification(this);
 		detach();
 		if (history()->isChannel()) {
-			if (history()->peer->isMegagroup() && history()->peer->asChannel()->mgInfo->pinnedMsgId == id) {
-				history()->peer->asChannel()->mgInfo->pinnedMsgId = 0;
+			if (auto channel = history()->peer->asChannel()) {
+				if (channel->pinnedMessageId() == id) {
+					channel->clearPinnedMessage();
+				}
 			}
 		}
 		if (history()->lastMsg == this) {
@@ -818,11 +822,18 @@ void HistoryItem::setId(MsgId newId) {
 	}
 }
 
+bool HistoryItem::isPinned() const {
+	if (auto channel = _history->peer->asChannel()) {
+		return (channel->pinnedMessageId() == id);
+	}
+	return false;
+}
+
 bool HistoryItem::canPin() const {
-	if (id < 0 || !_history->peer->isMegagroup() || !toHistoryMessage()) {
+	if (id < 0 || !toHistoryMessage()) {
 		return false;
 	}
-	if (auto channel = _history->peer->asMegagroup()) {
+	if (auto channel = _history->peer->asChannel()) {
 		return channel->canPinMessages();
 	}
 	return false;
@@ -845,7 +856,15 @@ bool HistoryItem::canForward() const {
 
 bool HistoryItem::canEdit(const QDateTime &cur) const {
 	auto messageToMyself = _history->peer->isSelf();
-	auto messageTooOld = messageToMyself ? false : (date.secsTo(cur) >= Global::EditTimeLimit());
+	auto canPinInMegagroup = [&] {
+		if (auto megagroup = _history->peer->asMegagroup()) {
+			return megagroup->canPinMessages();
+		}
+		return false;
+	}();
+
+	auto messageTooOld = (messageToMyself || canPinInMegagroup) ? false : (date.secsTo(cur) >= Global::EditTimeLimit());
+
 	if (id < 0 || messageTooOld) {
 		return false;
 	}

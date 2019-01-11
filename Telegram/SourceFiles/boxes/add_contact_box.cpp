@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/add_contact_box.h"
 
 #include "apiwrap.h"
@@ -68,7 +70,7 @@ QString PeerFloodErrorText(PeerFloodType type) {
 
 class RevokePublicLinkBox::Inner : public TWidget, private MTP::Sender {
 public:
-	Inner(QWidget *parent, base::lambda<void()> revokeCallback);
+	Inner(QWidget *parent, Fn<void()> revokeCallback);
 
 protected:
 	void mouseMoveEvent(QMouseEvent *e) override;
@@ -96,7 +98,7 @@ private:
 	int _rowHeight = 0;
 	int _revokeWidth = 0;
 
-	base::lambda<void()> _revokeCallback;
+	Fn<void()> _revokeCallback;
 	mtpRequestId _revokeRequestId = 0;
 	QPointer<ConfirmBox> _weakRevokeConfirmBox;
 };
@@ -600,7 +602,7 @@ SetupChannelBox::SetupChannelBox(QWidget *, ChannelData *channel, bool existing)
     , _aboutPrivate(st::defaultTextStyle,
                     lang(channel->isMegagroup() ? lng_create_private_group_about : lng_create_private_channel_about),
                     _defaultOptions, _aboutPublicWidth)
-    , _link(this, st::setupChannelLink, base::lambda<QString()>(), channel->username, true) {}
+    , _link(this, st::setupChannelLink, Fn<QString()>(), channel->username, true) {}
 
 void SetupChannelBox::prepare() {
 	_aboutPublicHeight = _aboutPublic.countHeight(_aboutPublicWidth);
@@ -1479,7 +1481,7 @@ void EditChannelBox::onSaveInvitesDone(const MTPUpdates &result) {
 	closeBox();
 }
 
-RevokePublicLinkBox::Inner::Inner(QWidget *parent, base::lambda<void()> revokeCallback)
+RevokePublicLinkBox::Inner::Inner(QWidget *parent, Fn<void()> revokeCallback)
     : TWidget(parent)
     , _rowHeight(st::contactsPadding.top() + st::contactsPhotoSize + st::contactsPadding.bottom())
     , _revokeWidth(st::normalFont->width(lang(lng_channels_too_much_public_revoke)))
@@ -1513,7 +1515,7 @@ RevokePublicLinkBox::Inner::Inner(QWidget *parent, base::lambda<void()> revokeCa
 	    .send();
 }
 
-RevokePublicLinkBox::RevokePublicLinkBox(QWidget *, base::lambda<void()> revokeCallback)
+RevokePublicLinkBox::RevokePublicLinkBox(QWidget *, Fn<void()> revokeCallback)
     : _aboutRevoke(this, lang(lng_channels_too_much_public_about), Ui::FlatLabel::InitType::Simple,
                    st::aboutRevokePublicLabel)
     , _revokeCallback(std::move(revokeCallback)) {}

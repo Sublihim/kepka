@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "ui/effects/ripple_animation.h"
 #include "app.h"
 #include "ui/animation.h"
@@ -199,7 +201,7 @@ void RippleAnimation::paint(QPainter &p, int x, int y, int outerWidth, TimeMs ms
 	clearFinished();
 }
 
-QImage RippleAnimation::maskByDrawer(QSize size, bool filled, base::lambda<void(QPainter &p)> drawer) {
+QImage RippleAnimation::maskByDrawer(QSize size, bool filled, Fn<void(QPainter &p)> drawer) {
 	auto result = QImage(size * cIntRetinaFactor(), QImage::Format_ARGB32_Premultiplied);
 	result.setDevicePixelRatio(cRetinaFactor());
 	result.fill(filled ? QColor(255, 255, 255) : Qt::transparent);
@@ -215,7 +217,7 @@ QImage RippleAnimation::maskByDrawer(QSize size, bool filled, base::lambda<void(
 }
 
 QImage RippleAnimation::rectMask(QSize size) {
-	return maskByDrawer(size, true, base::lambda<void(QPainter &)>());
+	return maskByDrawer(size, true, Fn<void(QPainter &)>());
 }
 
 QImage RippleAnimation::roundRectMask(QSize size, int radius) {

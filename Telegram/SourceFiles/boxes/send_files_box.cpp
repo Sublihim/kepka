@@ -1,23 +1,25 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #include "boxes/send_files_box.h"
 
 #include "core/file_utilities.h"
@@ -269,7 +271,7 @@ void SendFilesBox::prepare() {
 	updateBoxSize();
 }
 
-base::lambda<QString()> SendFilesBox::getSendButtonText() const {
+Fn<QString()> SendFilesBox::getSendButtonText() const {
 	if (!_contactPhone.isEmpty()) {
 		return langFactory(lng_send_button);
 	} else if (_compressed && _compressed->checked()) {
@@ -804,7 +806,7 @@ void EditCaptionBox::onSave(bool ctrlShiftEnter) {
 	auto text = TextUtilities::PrepareForSending(_field->getLastText(), TextUtilities::PrepareTextOption::CheckLinks);
 	_saveRequestId =
 	    MTP::send(MTPmessages_EditMessage(MTP_flags(flags), item->history()->peer->input, MTP_int(item->id),
-	                                      MTP_string(text), MTPnullMarkup, sentEntities),
+	                                      MTP_string(text), MTPnullMarkup, sentEntities, MTP_inputGeoPointEmpty()),
 	              rpcDone(&EditCaptionBox::saveDone), rpcFail(&EditCaptionBox::saveFail));
 }
 

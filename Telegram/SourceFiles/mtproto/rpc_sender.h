@@ -1,28 +1,31 @@
-/*
-This file is part of Telegram Desktop,
-the official desktop version of Telegram messaging app, see https://telegram.org
-
-Telegram Desktop is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-It is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
-GNU General Public License for more details.
-
-In addition, as a special exception, the copyright holders give permission
-to link the code of portions of this program with the OpenSSL library.
-
-Full license: https://github.com/telegramdesktop/tdesktop/blob/master/LICENSE
-Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-*/
+//
+// This file is part of Kepka,
+// an unofficial desktop version of Telegram messaging app,
+// see https://github.com/procxx/kepka
+//
+// Kepka is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// It is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE. See the
+// GNU General Public License for more details.
+//
+// In addition, as a special exception, the copyright holders give permission
+// to link the code of portions of this program with the OpenSSL library.
+//
+// Full license: https://github.com/procxx/kepka/blob/master/LICENSE
+// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
+// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+//
 #pragma once
 
 #include "base/lambda_guard.h"
 #include "core/basic_types.h"
 #include "core/utils.h"
+#include "backports/is_invocable.h"
 #include "scheme.h"
 #include <QSet>
 #include <QString>
@@ -854,7 +857,7 @@ using MTPSessionResetHandler = void (*)(qint32 dcId);
 
 template <typename Base, typename FunctionType> class RPCHandlerImplementation : public Base {
 protected:
-	using Lambda = base::lambda_once<FunctionType>;
+	using Lambda = FnMut<FunctionType>;
 	using Parent = RPCHandlerImplementation<Base, FunctionType>;
 
 public:
@@ -920,7 +923,9 @@ template <typename R> class RPCDoneHandlerImplementationNo : public RPCDoneHandl
 public:
 	using RPCDoneHandlerImplementation<R()>::Parent::Parent;
 	void operator()(mtpRequestId requestId, const mtpPrime *from, const mtpPrime *end) override {
-		return this->_handler ? this->_handler() : void(0);
+		if (this->_handler) {
+			this->_handler();
+		}
 	}
 };
 
@@ -929,41 +934,82 @@ class RPCDoneHandlerImplementationNoReq : public RPCDoneHandlerImplementation<R(
 public:
 	using RPCDoneHandlerImplementation<R(mtpRequestId)>::Parent::Parent;
 	void operator()(mtpRequestId requestId, const mtpPrime *from, const mtpPrime *end) override {
-		return this->_handler ? this->_handler(requestId) : void(0);
+		if (this->_handler) {
+			this->_handler(requestId);
+		}
 	}
 };
 
-template <typename R>
-inline RPCDoneHandlerPtr rpcDone_lambda_wrap_helper(base::lambda_once<R(const mtpPrime *, const mtpPrime *)> lambda) {
-	return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationBare<R>(std::move(lambda)));
-}
+template <typename Lambda>
+constexpr bool rpcDone_canCallBare_v = backports::is_invocable_v<Lambda, const mtpPrime *, const mtpPrime *>;
 
-template <typename R>
-inline RPCDoneHandlerPtr
-rpcDone_lambda_wrap_helper(base::lambda_once<R(const mtpPrime *, const mtpPrime *, mtpRequestId)> lambda) {
-	return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationBareReq<R>(std::move(lambda)));
-}
+template <typename Lambda>
+constexpr bool rpcDone_canCallBareReq_v =
+    backports::is_invocable_v<Lambda, const mtpPrime *, const mtpPrime *, mtpRequestId>;
 
-template <typename R, typename T>
-inline RPCDoneHandlerPtr rpcDone_lambda_wrap_helper(base::lambda_once<R(const T &)> lambda) {
-	return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationPlain<R, T>(std::move(lambda)));
-}
+template <typename Lambda> constexpr bool rpcDone_canCallNo_v = backports::is_invocable_v<Lambda>;
 
-template <typename R, typename T>
-inline RPCDoneHandlerPtr rpcDone_lambda_wrap_helper(base::lambda_once<R(const T &, mtpRequestId)> lambda) {
-	return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationReq<R, T>(std::move(lambda)));
-}
+template <typename Lambda> constexpr bool rpcDone_canCallNoReq_v = backports::is_invocable_v<Lambda, mtpRequestId>;
 
-template <typename R> inline RPCDoneHandlerPtr rpcDone_lambda_wrap_helper(base::lambda_once<R()> lambda) {
-	return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationNo<R>(std::move(lambda)));
-}
+template <typename Function> struct rpcDone_canCallPlain : std::false_type {};
 
-template <typename R> inline RPCDoneHandlerPtr rpcDone_lambda_wrap_helper(base::lambda_once<R(mtpRequestId)> lambda) {
-	return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationNoReq<R>(std::move(lambda)));
-}
+template <typename Lambda, typename Return, typename T>
+struct rpcDone_canCallPlain<Return (Lambda::*)(const T &)> : std::true_type {
+	using Arg = T;
+};
 
-template <typename Lambda> RPCDoneHandlerPtr rpcDone(Lambda lambda) {
-	return rpcDone_lambda_wrap_helper(base::lambda_type<Lambda>(std::move(lambda)));
+template <typename Lambda, typename Return, typename T>
+struct rpcDone_canCallPlain<Return (Lambda::*)(const T &) const> : rpcDone_canCallPlain<Return (Lambda::*)(const T &)> {
+};
+
+template <typename Function> constexpr bool rpcDone_canCallPlain_v = rpcDone_canCallPlain<Function>::value;
+
+template <typename Function> struct rpcDone_canCallReq : std::false_type {};
+
+template <typename Lambda, typename Return, typename T>
+struct rpcDone_canCallReq<Return (Lambda::*)(const T &, mtpRequestId)> : std::true_type {
+	using Arg = T;
+};
+
+template <typename Lambda, typename Return, typename T>
+struct rpcDone_canCallReq<Return (Lambda::*)(const T &, mtpRequestId) const>
+    : rpcDone_canCallReq<Return (Lambda::*)(const T &, mtpRequestId)> {};
+
+template <typename Function> constexpr bool rpcDone_canCallReq_v = rpcDone_canCallReq<Function>::value;
+
+template <typename Function> struct rpcDone_returnType;
+
+template <typename Lambda, typename Return, typename... Args> struct rpcDone_returnType<Return (Lambda::*)(Args...)> {
+	using type = Return;
+};
+
+template <typename Lambda, typename Return, typename... Args>
+struct rpcDone_returnType<Return (Lambda::*)(Args...) const> {
+	using type = Return;
+};
+
+template <typename Function> using rpcDone_returnType_t = typename rpcDone_returnType<Function>::type;
+
+template <typename Lambda, typename Function = base::lambda_call_type_t<Lambda>>
+RPCDoneHandlerPtr rpcDone(Lambda lambda) {
+	using R = rpcDone_returnType_t<Function>;
+	if constexpr (rpcDone_canCallBare_v<Lambda>) {
+		return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationBare<R>(std::move(lambda)));
+	} else if constexpr (rpcDone_canCallBareReq_v<Lambda>) {
+		return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationBareReq<R>(std::move(lambda)));
+	} else if constexpr (rpcDone_canCallNo_v<Lambda>) {
+		return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationNo<R>(std::move(lambda)));
+	} else if constexpr (rpcDone_canCallNoReq_v<Lambda>) {
+		return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationNoReq<R>(std::move(lambda)));
+	} else if constexpr (rpcDone_canCallPlain_v<Function>) {
+		using T = typename rpcDone_canCallPlain<Function>::Arg;
+		return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationPlain<R, T>(std::move(lambda)));
+	} else if constexpr (rpcDone_canCallReq_v<Function>) {
+		using T = typename rpcDone_canCallReq<Function>::Arg;
+		return RPCDoneHandlerPtr(new RPCDoneHandlerImplementationReq<R, T>(std::move(lambda)));
+	} else {
+		static_assert(std::is_same<decltype(lambda), bool>::value, "Unknown method.");
+	}
 }
 
 template <typename FunctionType>
@@ -1002,22 +1048,26 @@ public:
 	}
 };
 
-inline RPCFailHandlerPtr rpcFail_lambda_wrap_helper(base::lambda_once<bool(const RPCError &)> lambda) {
-	return RPCFailHandlerPtr(new RPCFailHandlerImplementationPlain(std::move(lambda)));
-}
+template <typename Lambda> constexpr bool rpcFail_canCallNo_v = backports::is_invocable_v<Lambda>;
 
-inline RPCFailHandlerPtr rpcFail_lambda_wrap_helper(base::lambda_once<bool(const RPCError &, mtpRequestId)> lambda) {
-	return RPCFailHandlerPtr(new RPCFailHandlerImplementationReq(std::move(lambda)));
-}
+template <typename Lambda> constexpr bool rpcFail_canCallNoReq_v = backports::is_invocable_v<Lambda, mtpRequestId>;
 
-inline RPCFailHandlerPtr rpcFail_lambda_wrap_helper(base::lambda_once<bool()> lambda) {
-	return RPCFailHandlerPtr(new RPCFailHandlerImplementationNo(std::move(lambda)));
-}
+template <typename Lambda> constexpr bool rpcFail_canCallPlain_v = backports::is_invocable_v<Lambda, const RPCError &>;
 
-inline RPCFailHandlerPtr rpcFail_lambda_wrap_helper(base::lambda_once<bool(mtpRequestId)> lambda) {
-	return RPCFailHandlerPtr(new RPCFailHandlerImplementationNoReq(std::move(lambda)));
-}
+template <typename Lambda>
+constexpr bool rpcFail_canCallReq_v = backports::is_invocable_v<Lambda, const RPCError &, mtpRequestId>;
 
-template <typename Lambda> RPCFailHandlerPtr rpcFail(Lambda lambda) {
-	return rpcFail_lambda_wrap_helper(base::lambda_type<Lambda>(std::move(lambda)));
+template <typename Lambda, typename Function = base::lambda_call_type_t<Lambda>>
+RPCFailHandlerPtr rpcFail(Lambda lambda) {
+	if constexpr (rpcFail_canCallNo_v<Lambda>) {
+		return RPCFailHandlerPtr(new RPCFailHandlerImplementationNo(std::move(lambda)));
+	} else if constexpr (rpcFail_canCallNoReq_v<Lambda>) {
+		return RPCFailHandlerPtr(new RPCFailHandlerImplementationNoReq(std::move(lambda)));
+	} else if constexpr (rpcFail_canCallPlain_v<Lambda>) {
+		return RPCFailHandlerPtr(new RPCFailHandlerImplementationPlain(std::move(lambda)));
+	} else if constexpr (rpcFail_canCallReq_v<Lambda>) {
+		return RPCFailHandlerPtr(new RPCFailHandlerImplementationReq(std::move(lambda)));
+	} else {
+		static_assert(std::is_same<decltype(lambda), bool>::value, "Unknown method.");
+	}
 }
