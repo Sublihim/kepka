@@ -447,6 +447,7 @@ add_executable(Kepka WIN32 MACOSX_BUNDLE
     SourceFiles/app.cpp
     SourceFiles/application.cpp
     SourceFiles/auth_session.cpp
+    SourceFiles/config.cpp
     SourceFiles/facades.cpp
     SourceFiles/layerwidget.cpp
     SourceFiles/layout.cpp
@@ -564,7 +565,6 @@ if (WIN32)
         -DHAVE_STDINT_H -DNOMINMAX)
 endif()
 
-add_definitions(-DAL_LIBTYPE_STATIC)
 add_definitions(-DAL_ALEXT_PROTOTYPES)
 
 if (LINUX)
@@ -693,6 +693,22 @@ endif()
 
 if (LINUX)
     target_link_libraries(Kepka Qt5::DBus dl ${ALSA_LIBRARIES} ${PULSEAUDIO_LIBRARIES})
+endif()
+
+# Enable LTO optimizations...
+include(CheckIPOSupported)
+check_ipo_supported(RESULT ipo_result OUTPUT ipo_output)
+
+if(ipo_result)
+    message(STATUS "IPO optimizations enabled.")
+    if(LINUX AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
+        set(CMAKE_AR "/usr/bin/gcc-ar")
+        set(CMAKE_RANLIB "/usr/bin/gcc-ranlib")
+        set(CMAKE_NM "/usr/bin/gcc-nm")
+    endif()
+    set_property(TARGET Kepka PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+else()
+    message(WARNING "IPO is not supported: ${ipo_output}")
 endif()
 
 ##================================================

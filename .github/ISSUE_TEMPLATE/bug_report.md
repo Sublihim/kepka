@@ -1,3 +1,8 @@
+---
+name: Bug report
+about: Create a report to help us improve
+
+---
 <!--
 Thanks for reporting issues of Kepka!
 
@@ -24,6 +29,6 @@ Tell us what happens instead
 <details><summary><b>Logs</b>:</summary>
 Insert logs here (if necessary)
 
-<!-- You can type `debugmode` in settings and then see ~/.TelegramDesktop/DebugLogs/log_...txt for log files.
+<!-- You can type `debugmode` in settings and then see ~/.local/share/Kepka/DebugLogs/log_...txt for log files.
 Type `debugmode` in settings again to disable logs. -->
 </details>
