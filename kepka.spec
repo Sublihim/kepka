@@ -1,9 +1,10 @@
-# Allow to use Clang compiler...
-%global clang 0
+# Setting some build conditions...
+%bcond_with clang
+%bcond_without ipo
 
 # Applying workaround to RHBZ#1559007...
-%if 0%{?clang}
-%global optflags %(echo %{optflags} | sed -e 's/-mcet//g' -e 's/-fcf-protection//g' -e 's/-fstack-clash-protection//g')
+%if %{with clang}
+%global optflags %(echo %{optflags} | sed -e 's/-mcet//g' -e 's/-fcf-protection//g' -e 's/-fstack-clash-protection//g' -e 's/$/-Qunused-arguments -Wno-unknown-warning-option/')
 %endif
 
 Name: kepka
@@ -17,6 +18,7 @@ Source0: %{url}/archive/v%{version}.tar.gz#/%{name}-%{version}.tar.gz
 ExclusiveArch: i686 x86_64
 
 # Additional runtime requirements...
+%{?_qt5:Requires: %{_qt5}%{?_isa} = %{_qt5_version}}
 Requires: qt5-qtimageformats%{?_isa}
 Requires: hicolor-icon-theme
 
@@ -29,7 +31,7 @@ BuildRequires: cmake
 BuildRequires: gcc
 
 # Clang compiler and tools if enabled...
-%if 0%{?clang}
+%if %{with clang}
 BuildRequires: compiler-rt
 BuildRequires: clang
 BuildRequires: llvm
@@ -37,6 +39,7 @@ BuildRequires: llvm
 
 # Development packages for main application...
 BuildRequires: guidelines-support-library-devel
+BuildRequires: qt5-qtbase-private-devel
 BuildRequires: libappindicator-devel
 BuildRequires: mapbox-variant-devel
 BuildRequires: ffmpeg-devel >= 3.1
@@ -73,15 +76,28 @@ personal or business messaging needs.
 mkdir -p %{_target_platform}
 
 %build
-# Overriding compiler settings...
-%if 0%{?clang}
-export CC=clang
-export CXX=clang++
-%endif
-
 # Configuring application...
 pushd %{_target_platform}
-    %cmake -G Ninja -DPACKAGED_BUILD=1 -DCMAKE_BUILD_TYPE=Release ..
+    %cmake -G Ninja \
+%if %{with clang}
+    -DCMAKE_C_COMPILER=clang \
+    -DCMAKE_CXX_COMPILER=clang++ \
+    -DCMAKE_AR=%{_bindir}/llvm-ar \
+    -DCMAKE_RANLIB=%{_bindir}/llvm-ranlib \
+    -DCMAKE_LINKER=%{_bindir}/llvm-ld \
+    -DCMAKE_OBJDUMP=%{_bindir}/llvm-objdump \
+    -DCMAKE_NM=%{_bindir}/llvm-nm \
+%else
+    -DCMAKE_AR=%{_bindir}/gcc-ar \
+    -DCMAKE_RANLIB=%{_bindir}/gcc-ranlib \
+    -DCMAKE_NM=%{_bindir}/gcc-nm \
+%endif
+    -DPACKAGED_BUILD:BOOL=ON \
+%if %{with ipo}
+    -DENABLE_IPO:BOOL=ON \
+%endif
+    -DCMAKE_BUILD_TYPE=Release \
+    ..
 popd
 
 # Building application...

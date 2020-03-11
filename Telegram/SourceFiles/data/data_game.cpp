@@ -17,34 +17,24 @@
 // to link the code of portions of this program with the OpenSSL library.
 //
 // Full license: https://github.com/procxx/kepka/blob/master/LICENSE
-// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
 // Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
 //
-#include "intro/introstart.h"
 
-#include "application.h"
-#include "config.h"
-#include "intro/introphone.h"
-#include "lang/lang_keys.h"
-#include "ui/widgets/buttons.h"
-#include "ui/widgets/labels.h"
+#include "data_game.h"
+#include "data/data_photo.h"
+#include "data/data_document.h"
 
-namespace Intro {
+GameData::GameData(const GameId &id, const quint64 &accessHash, const QString &shortName, const QString &title,
+                   const QString &description, PhotoData *photo, DocumentData *document)
+    : id(id)
+    , accessHash(accessHash)
+    , shortName(shortName)
+    , title(title)
+    , description(description)
+    , photo(photo)
+    , document(document) {}
 
-StartWidget::StartWidget(QWidget *parent, Widget::Data *data)
-    : Step(parent, data, true) {
-	setMouseTracking(true);
-	setTitleText([] { return str_const_toString(AppName); });
-	setDescriptionText([] { return lng_intro_about(lt_appname, lang(appname)); });
-	show();
+void GameData::forget() {
+	if (document) document->forget();
+	if (photo) photo->forget();
 }
-
-void StartWidget::submit() {
-	goNext(new Intro::PhoneWidget(parentWidget(), getData()));
-}
-
-QString StartWidget::nextButtonText() const {
-	return lang(lng_start_msgs);
-}
-
-} // namespace Intro

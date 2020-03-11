@@ -31,49 +31,9 @@
 #include "ui/images.h"
 #include "ui/text/text.h"
 #include "ui/twidget.h"
-
-using MediaKey = QPair<quint64, quint64>;
-
-inline quint64 mediaMix32To64(qint32 a, qint32 b) {
-	return (quint64(*reinterpret_cast<quint32 *>(&a)) << 32) | quint64(*reinterpret_cast<quint32 *>(&b));
-}
-
-enum LocationType {
-	UnknownFileLocation = 0,
-	// 1, 2, etc are used as "version" value in mediaKey() method.
-
-	DocumentFileLocation = 0x4e45abe9, // mtpc_inputDocumentFileLocation
-	AudioFileLocation = 0x74dc404d, // mtpc_inputAudioFileLocation
-	VideoFileLocation = 0x3d0364ec, // mtpc_inputVideoFileLocation
-};
-
-// Old method, should not be used anymore.
-// inline MediaKey mediaKey(LocationType type, qint32 dc, const quint64 &id) {
-//	return MediaKey(mediaMix32To64(type, dc), id);
-//}
-// New method when version was introduced, type is not relevant anymore (all files are Documents).
-inline MediaKey mediaKey(LocationType type, qint32 dc, const quint64 &id, qint32 version) {
-	return (version > 0) ? MediaKey(mediaMix32To64(version, dc), id) : MediaKey(mediaMix32To64(type, dc), id);
-}
-
-inline StorageKey mediaKey(const MTPDfileLocation &location) {
-	return storageKey(location.vdc_id.v, location.vvolume_id.v, location.vlocal_id.v);
-}
-
-typedef qint32 UserId;
-typedef qint32 ChatId;
-typedef qint32 ChannelId;
-static const ChannelId NoChannel = 0;
-
-typedef qint32 MsgId;
-struct FullMsgId {
-	FullMsgId() = default;
-	FullMsgId(ChannelId channel, MsgId msg)
-	    : channel(channel)
-	    , msg(msg) {}
-	ChannelId channel = NoChannel;
-	MsgId msg = 0;
-};
+#include "data/data_types.h"
+#include "data/data_photo.h"
+#include "data/data_document.h"
 
 typedef quint64 PeerId;
 static const quint64 PeerIdMask = 0xFFFFFFFFULL;
@@ -177,12 +137,10 @@ inline TimeId dateFromMessage(const MTPmessage &msg) {
 	return 0;
 }
 
-using PhotoId = quint64;
 using VideoId = quint64;
 using AudioId = quint64;
 using DocumentId = quint64;
 using WebPageId = quint64;
-using GameId = quint64;
 static const WebPageId CancelledWebPageId = 0xFFFFFFFFFFFFFFFFULL;
 
 inline bool operator==(const FullMsgId &a, const FullMsgId &b) {
@@ -197,18 +155,9 @@ inline bool operator<(const FullMsgId &a, const FullMsgId &b) {
 	return a.channel < b.channel;
 }
 
-constexpr const MsgId StartClientMsgId = -0x7FFFFFFF;
-constexpr const MsgId EndClientMsgId = -0x40000000;
 inline constexpr bool isClientMsgId(MsgId id) {
 	return id >= StartClientMsgId && id < EndClientMsgId;
 }
-constexpr const MsgId ShowAtTheEndMsgId = -0x40000000;
-constexpr const MsgId SwitchAtTopMsgId = -0x3FFFFFFF;
-constexpr const MsgId ShowAtProfileMsgId = -0x3FFFFFFE;
-constexpr const MsgId ShowAndStartBotMsgId = -0x3FFFFFD;
-constexpr const MsgId ShowAtGameShareMsgId = -0x3FFFFFC;
-constexpr const MsgId ServerMaxMsgId = 0x3FFFFFFF;
-constexpr const MsgId ShowAtUnreadMsgId = 0;
 
 struct NotifySettings {
 	NotifySettings()
@@ -1114,351 +1063,13 @@ inline bool PeerData::canWrite() const {
 	                     (isChat() ? asChat()->canWrite() : (isUser() ? asUser()->canWrite() : false));
 }
 
-enum ActionOnLoad { ActionOnLoadNone, ActionOnLoadOpen, ActionOnLoadOpenWith, ActionOnLoadPlayInline };
-
 typedef QMap<char, QPixmap> PreparedPhotoThumbs;
-class PhotoData {
-public:
-	PhotoData(const PhotoId &id, const quint64 &access = 0, qint32 date = 0, const ImagePtr &thumb = ImagePtr(),
-	          const ImagePtr &medium = ImagePtr(), const ImagePtr &full = ImagePtr());
-
-	void automaticLoad(const HistoryItem *item);
-	void automaticLoadSettingsChanged();
-
-	void download();
-	bool loaded() const;
-	bool loading() const;
-	bool displayLoading() const;
-	void cancel();
-	double progress() const;
-	qint32 loadOffset() const;
-	bool uploading() const;
-
-	void forget();
-	ImagePtr makeReplyPreview();
-
-	PhotoId id;
-	quint64 access;
-	qint32 date;
-	ImagePtr thumb, replyPreview;
-	ImagePtr medium;
-	ImagePtr full;
-
-	PeerData *peer = nullptr; // for chat and channel photos connection
-	// geo, caption
-
-	struct UploadingData {
-		UploadingData(int size)
-		    : size(size) {}
-		int offset = 0;
-		int size = 0;
-	};
-	std::unique_ptr<UploadingData> uploadingData;
-
-private:
-	void notifyLayoutChanged() const;
-};
-
-class PhotoClickHandler : public LeftButtonClickHandler {
-public:
-	PhotoClickHandler(not_null<PhotoData *> photo, PeerData *peer = nullptr)
-	    : _photo(photo)
-	    , _peer(peer) {}
-	not_null<PhotoData *> photo() const {
-		return _photo;
-	}
-	PeerData *peer() const {
-		return _peer;
-	}
-
-private:
-	not_null<PhotoData *> _photo;
-	PeerData *_peer;
-};
-
-class PhotoOpenClickHandler : public PhotoClickHandler {
-public:
-	using PhotoClickHandler::PhotoClickHandler;
-
-protected:
-	void onClickImpl() const override;
-};
-
-class PhotoSaveClickHandler : public PhotoClickHandler {
-public:
-	using PhotoClickHandler::PhotoClickHandler;
-
-protected:
-	void onClickImpl() const override;
-};
-
-class PhotoCancelClickHandler : public PhotoClickHandler {
-public:
-	using PhotoClickHandler::PhotoClickHandler;
-
-protected:
-	void onClickImpl() const override;
-};
-
-enum FileStatus {
-	FileDownloadFailed = -2,
-	FileUploadFailed = -1,
-	FileUploading = 0,
-	FileReady = 1,
-};
-
-// Don't change the values. This type is used for serialization.
-enum DocumentType {
-	FileDocument = 0,
-	VideoDocument = 1,
-	SongDocument = 2,
-	StickerDocument = 3,
-	AnimatedDocument = 4,
-	VoiceDocument = 5,
-	RoundVideoDocument = 6,
-};
-
-struct DocumentAdditionalData {
-	virtual ~DocumentAdditionalData() = default;
-};
-
-struct StickerData : public DocumentAdditionalData {
-	ImagePtr img;
-	QString alt;
-
-	MTPInputStickerSet set = MTP_inputStickerSetEmpty();
-	bool setInstalled() const;
-
-	StorageImageLocation loc; // doc thumb location
-};
-
-struct SongData : public DocumentAdditionalData {
-	qint32 duration = 0;
-	QString title, performer;
-};
-
-typedef QVector<char> VoiceWaveform; // [0] == -1 -- counting, [0] == -2 -- could not count
-struct VoiceData : public DocumentAdditionalData {
-	~VoiceData();
-
-	int duration = 0;
-	VoiceWaveform waveform;
-	char wavemax = 0;
-};
 
 bool fileIsImage(const QString &name, const QString &mime);
 
 namespace Serialize {
 class Document;
 } // namespace Serialize
-
-class DocumentData {
-public:
-	static DocumentData *create(DocumentId id);
-	static DocumentData *create(DocumentId id, qint32 dc, quint64 accessHash, qint32 version,
-	                            const QVector<MTPDocumentAttribute> &attributes);
-	static DocumentData *create(DocumentId id, const QString &url, const QVector<MTPDocumentAttribute> &attributes);
-
-	void setattributes(const QVector<MTPDocumentAttribute> &attributes);
-
-	void automaticLoad(const HistoryItem *item); // auto load sticker or video
-	void automaticLoadSettingsChanged();
-
-	enum FilePathResolveType {
-		FilePathResolveCached,
-		FilePathResolveChecked,
-		FilePathResolveSaveFromData,
-		FilePathResolveSaveFromDataSilent,
-	};
-	bool loaded(FilePathResolveType type = FilePathResolveCached) const;
-	bool loading() const;
-	QString loadingFilePath() const;
-	bool displayLoading() const;
-	void save(const QString &toFile, ActionOnLoad action = ActionOnLoadNone, const FullMsgId &actionMsgId = FullMsgId(),
-	          LoadFromCloudSetting fromCloud = LoadFromCloudOrLocal, bool autoLoading = false);
-	void cancel();
-	double progress() const;
-	qint32 loadOffset() const;
-	bool uploading() const;
-
-	QByteArray data() const;
-	const FileLocation &location(bool check = false) const;
-	void setLocation(const FileLocation &loc);
-
-	QString filepath(FilePathResolveType type = FilePathResolveCached, bool forceSavingAs = false) const;
-
-	bool saveToCache() const;
-
-	void performActionOnLoad();
-
-	void forget();
-	ImagePtr makeReplyPreview();
-
-	StickerData *sticker() {
-		return (type == StickerDocument) ? static_cast<StickerData *>(_additional.get()) : nullptr;
-	}
-	void checkSticker() {
-		StickerData *s = sticker();
-		if (!s) return;
-
-		automaticLoad(nullptr);
-		if (s->img->isNull() && loaded()) {
-			if (_data.isEmpty()) {
-				const FileLocation &loc(location(true));
-				if (loc.accessEnable()) {
-					s->img = ImagePtr(loc.name());
-					loc.accessDisable();
-				}
-			} else {
-				s->img = ImagePtr(_data);
-			}
-		}
-	}
-	SongData *song() {
-		return (type == SongDocument) ? static_cast<SongData *>(_additional.get()) : nullptr;
-	}
-	const SongData *song() const {
-		return const_cast<DocumentData *>(this)->song();
-	}
-	VoiceData *voice() {
-		return (type == VoiceDocument) ? static_cast<VoiceData *>(_additional.get()) : nullptr;
-	}
-	const VoiceData *voice() const {
-		return const_cast<DocumentData *>(this)->voice();
-	}
-	bool isRoundVideo() const {
-		return (type == RoundVideoDocument);
-	}
-	bool isAnimation() const {
-		return (type == AnimatedDocument) || isRoundVideo() || hasMimeType(qstr("image/gif"));
-	}
-	bool isGifv() const {
-		return (type == AnimatedDocument) && hasMimeType(qstr("video/mp4"));
-	}
-	bool isTheme() const {
-		return _filename.endsWith(qstr(".tdesktop-theme"), Qt::CaseInsensitive) ||
-		       _filename.endsWith(qstr(".tdesktop-palette"), Qt::CaseInsensitive);
-	}
-	bool tryPlaySong() const {
-		return (song() != nullptr) || _mimeString.startsWith(qstr("audio/"), Qt::CaseInsensitive);
-	}
-	bool isMusic() const {
-		if (auto s = song()) {
-			return (s->duration > 0);
-		}
-		return false;
-	}
-	bool isVideo() const {
-		return (type == VideoDocument);
-	}
-	qint32 duration() const {
-		return (isAnimation() || isVideo()) ? _duration : -1;
-	}
-	bool isImage() const {
-		return !isAnimation() && !isVideo() && (_duration > 0);
-	}
-	void recountIsImage();
-	void setData(const QByteArray &data) {
-		_data = data;
-	}
-
-	bool setRemoteVersion(qint32 version); // Returns true if version has changed.
-	void setRemoteLocation(qint32 dc, quint64 access);
-	void setContentUrl(const QString &url);
-	bool hasRemoteLocation() const {
-		return (_dc != 0 && _access != 0);
-	}
-	bool isValid() const {
-		return hasRemoteLocation() || !_url.isEmpty();
-	}
-	MTPInputDocument mtpInput() const {
-		if (_access) {
-			return MTP_inputDocument(MTP_long(id), MTP_long(_access));
-		}
-		return MTP_inputDocumentEmpty();
-	}
-
-	// When we have some client-side generated document
-	// (for example for displaying an external inline bot result)
-	// and it has downloaded data, we can collect that data from it
-	// to (this) received from the server "same" document.
-	void collectLocalData(DocumentData *local);
-
-	QString filename() const {
-		return _filename;
-	}
-	QString mimeString() const {
-		return _mimeString;
-	}
-	bool hasMimeType(QLatin1String mime) const {
-		return !_mimeString.compare(mime, Qt::CaseInsensitive);
-	}
-	void setMimeString(const QString &mime) {
-		_mimeString = mime;
-	}
-
-
-	~DocumentData();
-
-	DocumentId id = 0;
-	DocumentType type = FileDocument;
-	QSize dimensions;
-	qint32 date = 0;
-	ImagePtr thumb, replyPreview;
-	qint32 size = 0;
-
-	FileStatus status = FileReady;
-	qint32 uploadOffset = 0;
-
-	qint32 md5[8];
-
-	MediaKey mediaKey() const {
-		return ::mediaKey(locationType(), _dc, id, _version);
-	}
-
-	static QString ComposeNameString(const QString &filename, const QString &songTitle, const QString &songPerformer);
-	QString composeNameString() const {
-		if (auto songData = song()) {
-			return ComposeNameString(_filename, songData->title, songData->performer);
-		}
-		return ComposeNameString(_filename, QString(), QString());
-	}
-
-private:
-	DocumentData(DocumentId id, qint32 dc, quint64 accessHash, qint32 version, const QString &url,
-	             const QVector<MTPDocumentAttribute> &attributes);
-
-	friend class Serialize::Document;
-
-	LocationType locationType() const {
-		return voice() ? AudioFileLocation : (isVideo() ? VideoFileLocation : DocumentFileLocation);
-	}
-
-	// Two types of location: from MTProto by dc+access+version or from web by url
-	qint32 _dc = 0;
-	quint64 _access = 0;
-	qint32 _version = 0;
-	QString _url;
-	QString _filename;
-	QString _mimeString;
-
-
-	FileLocation _location;
-	QByteArray _data;
-	std::unique_ptr<DocumentAdditionalData> _additional;
-	qint32 _duration = -1;
-
-	ActionOnLoad _actionOnLoad = ActionOnLoadNone;
-	FullMsgId _actionOnLoadMsgId;
-	mutable FileLoader *_loader = nullptr;
-
-	void notifyLayoutChanged() const;
-
-	void destroyLoaderDelayed(mtpFileLoader *newValue = nullptr) const;
-};
-
-VoiceWaveform documentWaveformDecode(const QByteArray &encoded5bit);
-QByteArray documentWaveformEncode5bit(const VoiceWaveform &waveform);
 
 class AudioMsgId {
 public:
@@ -1617,23 +1228,6 @@ struct WebPageData {
 	qint32 pendingTill;
 };
 
-struct GameData {
-	GameData(const GameId &id, const quint64 &accessHash = 0, const QString &shortName = QString(),
-	         const QString &title = QString(), const QString &description = QString(), PhotoData *photo = nullptr,
-	         DocumentData *doc = nullptr);
-
-	void forget() {
-		if (document) document->forget();
-		if (photo) photo->forget();
-	}
-
-	GameId id;
-	quint64 accessHash;
-	QString shortName, title, description;
-	PhotoData *photo;
-	DocumentData *document;
-};
-
 QString saveFileName(const QString &title, const QString &filter, const QString &prefix, QString name, bool savingAs,
                      const QDir &dir = QDir());
 MsgId clientMsgId();
@@ -1671,27 +1265,3 @@ struct MessageCursor {
 inline bool operator==(const MessageCursor &a, const MessageCursor &b) {
 	return (a.position == b.position) && (a.anchor == b.anchor) && (a.scroll == b.scroll);
 }
-
-struct SendAction {
-	enum class Type {
-		Typing,
-		RecordVideo,
-		UploadVideo,
-		RecordVoice,
-		UploadVoice,
-		RecordRound,
-		UploadRound,
-		UploadPhoto,
-		UploadFile,
-		ChooseLocation,
-		ChooseContact,
-		PlayGame,
-	};
-	SendAction(Type type, TimeMs until, int progress = 0)
-	    : type(type)
-	    , until(until)
-	    , progress(progress) {}
-	Type type;
-	TimeMs until;
-	int progress;
-};

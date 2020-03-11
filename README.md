@@ -20,9 +20,12 @@ This is the complete source code and the build instructions for the Kepka's alph
  - remove some Qt and custom types in favor of using C++ Standard Library types and classes;
  - clang-format;
  - fix almost all warnings;
+ - optional inter-procedural optimizations on \*nix (can be enabled by forwarding CMake's `-DENABLE_IPO:BOOL=ON` flag; improves performance but could significantly increase compilation times);
+ - optional packaged build for GNU/Linux maintainers (can be enabled by forwarding CMake's `-DPACKAGED_BUILD:BOOL=ON` flag; will disable automatic schema registration and icon generation);
 * Ability to toggle "typographical" replaces (like replace << to « and another);
 * Packages for Fedora and Arch Linux (packages for Debian and Ubuntu will be done soon);
 * UI based on 1.1.21 before UI "mobilization" which degrades UX (e.g. group settings will be accessible from 5 clicks);
+* Optional Yandex.Maps static API for geolocation preview (should be enabled at CMake configure time via `-DKEPKA_OPTION_USE_YANDEX_MAPS=ON` parameter);
 * More features soon (see our [milestones](https://github.com/procxx/kepka/projects))!
 
 ## Build instructions
@@ -114,6 +117,8 @@ $ cmake --build . --config RelWithDebInfo
 ![Preview of Telegram Desktop][preview_image]
 
 The source code is published under GPLv3 with OpenSSL exception, the license is available [here][license].
+
+The Kepka logo is available by CC-BY-SA 4.0 License. (c) 2018 leha-bot. The full CC-BY-SA 4.0 license text is available [here](https://creativecommons.org/licenses/by-sa/4.0/legalcode). 
 
 ## Supported systems
 

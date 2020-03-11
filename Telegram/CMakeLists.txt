@@ -7,6 +7,18 @@ if (LINUX)
     endif()
 endif()
 
+##================================================
+## API tokens
+##================================================
+if (DEFINED ENV{API_ID} AND DEFINED ENV{API_HASH})
+    set(API_ID ENV{API_ID})
+    set(API_HASH ENV{API_HASH})
+else()
+    message(WARNING "No custom API tokens detected. You must grab your own tokens from https://core.telegram.org/api/obtaining_api_id and export them using environment options. Will use default for testing purposes.")
+    set(API_ID 17349)
+    set(API_HASH "344583e45741c457fe1862106095a5eb")
+endif()
+
 #set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -H")
 set(CMAKE_INCLUDE_CURRENT_DIR ON)
 ##================================================
@@ -247,6 +259,8 @@ add_executable(Kepka WIN32 MACOSX_BUNDLE
 
     SourceFiles/data/data_abstract_structure.cpp
     SourceFiles/data/data_drafts.cpp
+    SourceFiles/data/data_game.cpp
+    SourceFiles/data/data_photo.cpp
 
     SourceFiles/dialogs/dialogs_indexed_list.cpp
     SourceFiles/dialogs/dialogs_inner_widget.cpp
@@ -696,19 +710,21 @@ if (LINUX)
 endif()
 
 # Enable LTO optimizations...
-include(CheckIPOSupported)
-check_ipo_supported(RESULT ipo_result OUTPUT ipo_output)
+if(ENABLE_IPO)
+    include(CheckIPOSupported)
+    check_ipo_supported(RESULT ipo_result OUTPUT ipo_output)
 
-if(ipo_result)
-    message(STATUS "IPO optimizations enabled.")
-    if(LINUX AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
-        set(CMAKE_AR "/usr/bin/gcc-ar")
-        set(CMAKE_RANLIB "/usr/bin/gcc-ranlib")
-        set(CMAKE_NM "/usr/bin/gcc-nm")
+    if(ipo_result)
+        message(STATUS "IPO optimizations enabled.")
+        if(LINUX AND (CMAKE_CXX_COMPILER_ID MATCHES "GNU"))
+            set(CMAKE_AR "/usr/bin/gcc-ar")
+            set(CMAKE_RANLIB "/usr/bin/gcc-ranlib")
+            set(CMAKE_NM "/usr/bin/gcc-nm")
+        endif()
+        set_property(TARGET Kepka PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
+    else()
+        message(WARNING "IPO is not supported: ${ipo_output}")
     endif()
-    set_property(TARGET Kepka PROPERTY INTERPROCEDURAL_OPTIMIZATION TRUE)
-else()
-    message(WARNING "IPO is not supported: ${ipo_output}")
 endif()
 
 ##================================================

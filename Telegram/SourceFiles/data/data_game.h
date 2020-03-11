@@ -17,34 +17,30 @@
 // to link the code of portions of this program with the OpenSSL library.
 //
 // Full license: https://github.com/procxx/kepka/blob/master/LICENSE
-// Copyright (c) 2014-2017 John Preston, https://desktop.telegram.org
-// Copyright (c) 2017- Kepka Contributors, https://github.com/procxx
+// Copyright (c) 2019- Kepka Contributors, https://github.com/procxx
 //
-#include "intro/introstart.h"
+/// @file data/data_game.h Data_type for Telegram Games.
 
-#include "application.h"
-#include "config.h"
-#include "intro/introphone.h"
-#include "lang/lang_keys.h"
-#include "ui/widgets/buttons.h"
-#include "ui/widgets/labels.h"
+#pragma once
 
-namespace Intro {
+#include "data/data_types.h"
 
-StartWidget::StartWidget(QWidget *parent, Widget::Data *data)
-    : Step(parent, data, true) {
-	setMouseTracking(true);
-	setTitleText([] { return str_const_toString(AppName); });
-	setDescriptionText([] { return lng_intro_about(lt_appname, lang(appname)); });
-	show();
-}
+class PhotoData;
+class DocumentData;
 
-void StartWidget::submit() {
-	goNext(new Intro::PhoneWidget(parentWidget(), getData()));
-}
+struct GameData {
+	GameData(const GameId &id)
+	    : id(id) {}
+	GameData(const GameId &id, const quint64 &accessHash, const QString &shortName, const QString &title,
+	         const QString &description, PhotoData *photo, DocumentData *document);
 
-QString StartWidget::nextButtonText() const {
-	return lang(lng_start_msgs);
-}
+	void forget();
 
-} // namespace Intro
+	GameId id = 0;
+	quint64 accessHash = 0;
+	QString shortName;
+	QString title;
+	QString description;
+	PhotoData *photo = nullptr;
+	DocumentData *document = nullptr;
+};

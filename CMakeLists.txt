@@ -6,10 +6,20 @@ project(Kepka
 #    HOMEPAGE_URL "https://github.com/procxx/kepka"
 )
 
-set(PROJECT_VERSION_RC 1)
+set(PROJECT_COMPANY_NAME "pro.cxx Community")
+set(PROJECT_VERSION_RC 2)
 
 if(PROJECT_VERSION_RC)
     set(PROJECT_VERSION "${PROJECT_VERSION}-rc${PROJECT_VERSION_RC}")
+endif()
+
+##================================================
+## Build customizations
+##================================================
+option(KEPKA_OPTION_USE_YANDEX_MAPS "Use Yandex.Maps static API for locations (instead Google Maps)" ON)
+
+if(KEPKA_OPTION_USE_YANDEX_MAPS)
+	add_definitions("-DKEPKA_USE_YANDEX_MAPS")
 endif()
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/modules/")
@@ -95,6 +105,8 @@ if (CCACHE)
     set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE})
 endif()
 
+option(ENABLE_IPO "Enable IPO optimizations." OFF)
+option(PACKAGED_BUILD "Enable packaged build." OFF)
 
 option(BUILD_DOC "Build documentation" OFF)
 mark_as_advanced(BUILD_DOC)
